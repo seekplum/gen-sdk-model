@@ -1,19 +1,19 @@
 {
-    "name": "awesome-chrome-extension-boilerplate",
-    "displayName": "awesome-chrome-extension-boilerplate",
+    "name": "gen-sdk-model",
+    "displayName": "gen-sdk-model",
     "version": "1.0.0",
     "browserslist": "Chrome >= 96",
-    "description": "made by awesome-chrome-extension-boilerplate",
+    "description": "made by gen-sdk-model",
     "private": true,
     "author": "YuTengjing",
     "license": "MIT",
-    "homepage": "https://github.com/tjx666/awesome-chrome-extension-boilerplate#readme",
+    "homepage": "https://github.com/seekplum/gen-sdk-model#readme",
     "repository": {
         "type": "git",
-        "url": "git+ssh://git@github.com/tjx666/awesome-chrome-extension-boilerplate.git"
+        "url": "git+ssh://git@github.com/seekplum/gen-sdk-model.git"
     },
     "bugs": {
-        "url": "https://github.com/tjx666/awesome-chrome-extension-boilerplate/issues"
+        "url": "https://github.com/seekplum/gen-sdk-model/issues"
     },
     "engines": {
         "node": "^18.12.1"

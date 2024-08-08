@@ -17,5 +17,5 @@ const args = yargs(process.argv.slice(2)).options({
 const extensionVersion = args?.extensionVersion || `v${pkg.version}`;
 
 const file = new AdmZip();
-file.addLocalFolder('./extension/awesome-chrome-extension-boilerplate');
-file.writeZip(`./extension/awesome-chrome-extension-boilerplate-${extensionVersion}.zip`);
+file.addLocalFolder('./extension/gen-sdk-model');
+file.writeZip(`./extension/gen-sdk-model-${extensionVersion}.zip`);

@@ -72,7 +72,7 @@ jobs:
         uses: ncipollo/release-action@v1.14.0
         if: always() && steps.create_tag.outcome == 'success'
         with:
-          artifacts: "extension/awesome-chrome-extension-boilerplate-chrome-extension-${{ env.EXTENSION_VERSION }}.zip"
+          artifacts: "extension/gen-sdk-model-chrome-extension-${{ env.EXTENSION_VERSION }}.zip"
           token: ${{ secrets.RElEASE_TOKEN }}
           name: ${{ env.EXTENSION_VERSION }}
           # tag: ${{ env.EXTENSION_VERSION }}

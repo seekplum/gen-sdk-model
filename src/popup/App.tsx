@@ -10,7 +10,7 @@ const App: React.FC = () => {
         >
             <Flex vertical gap={12} style={{ width: '100%' }}>
                 <Flex align="center" gap={8} style={{ margin: '0 16px' }}>
-                    <Typography.Title style={{ fontSize: 18 }}>XXXX</Typography.Title>
+                    <Typography.Title style={{ fontSize: 18 }}>Generate SDK Model</Typography.Title>
                 </Flex>
                 <ControlList />
             </Flex>
