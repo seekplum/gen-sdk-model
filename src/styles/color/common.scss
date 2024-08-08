@@ -1,0 +1,5 @@
+@use 'sass:color';
+
+@function hover-color($color) {
+    @return color.adjust($color, $lightness: -3%);
+}

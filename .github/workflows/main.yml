@@ -1,0 +1,78 @@
+
+# 工作流程的名字
+name: Build and Release
+
+# 工作流程触发的时机，这里是当一个版本标签推送到仓库时触发
+on:
+  push:
+    # branches:
+    #   - master
+    tags:
+      - v*
+
+jobs:
+  process:
+    name: all process
+    runs-on: ubuntu-latest
+    steps:
+      # 拉取项目代码
+      - uses: actions/checkout@v4
+
+      # 建立 node 环境
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        id: pnpm-install
+        with:
+          version: 7
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      # 下载项目依赖
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Create Tag
+        id: create_tag
+        uses: jaywcjlove/create-tag-action@v2.2.0
+        with:
+          package-path: ./package.json
+
+      # - name: Dump Create Tag
+      #   env:
+      #     CREATE_TAG_OUTPUTS: ${{ toJSON(steps.create_tag) }}
+      #   # 将信息都打印出来，后面的脚本可以使用这些信息
+      #   run: echo "CREATE_TAG_OUTPUTS ${{ env.CREATE_TAG_OUTPUTS }}"
+
+      - name: Generate Extension Version
+        run: echo EXTENSION_VERSION=v${{ steps.create_tag.outputs.version }} >> $GITHUB_ENV
+
+      # 压缩成zip包
+      - name: Build in production mode
+        run: pnpm build:zip --extensionVersion ${{ env.EXTENSION_VERSION }}
+
+      # 发布到 Release
+      - name: Publish Release
+        uses: ncipollo/release-action@v1.14.0
+        if: always() && steps.create_tag.outcome == 'success'
+        with:
+          artifacts: "extension/awesome-chrome-extension-boilerplate-chrome-extension-${{ env.EXTENSION_VERSION }}.zip"
+          token: ${{ secrets.RElEASE_TOKEN }}
+          name: ${{ env.EXTENSION_VERSION }}
+          # tag: ${{ env.EXTENSION_VERSION }}

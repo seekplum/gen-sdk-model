@@ -1,0 +1,25 @@
+@use '~@/styles/color' as color;
+
+.wrapper {
+    height: 40px;
+    padding: 0 16px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.3s;
+
+    &:hover {
+        background-color: color.$gray-4;
+    }
+}
+
+.wrapperDisabled {
+    cursor: not-allowed;
+
+    * {
+        pointer-events: none;
+    }
+}
+
+.tooltipRoot {
+    pointer-events: none;
+}

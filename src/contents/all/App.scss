@@ -1,0 +1,15 @@
+@use '~@/styles/color' as color;
+
+#plumChromeExtensionBox {
+    position: fixed;
+    top: 32;
+    right: 0;
+    z-index: 999999999;
+    min-width: 400px;
+    max-width: 800px;
+    min-height: 400px;
+    max-height: 800px;
+    user-select: none;
+    background: color.$static-gray-4;
+    border: 1px solid color.$static-gray-1;
+}
