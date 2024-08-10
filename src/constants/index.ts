@@ -17,5 +17,45 @@ export enum EventNames {
 }
 
 export enum Platform {
-    GITHUB = 'github',
+    DOUDIAN = 'doudian',
 }
+
+export enum VariableTypes {
+    STRING = 'str',
+    INT = 'int',
+    FLOAT = 'float',
+    BOOL = 'bool',
+    OBJECT = 'object',
+    LIST = 'list',
+}
+
+export enum ModelTypes {
+    PARAM = 'param',
+    RESPONSE = 'response',
+    REQUEST = 'request',
+    CHILD = 'child',
+}
+
+export enum Language {
+    PYTHON = 'python',
+}
+
+export enum PartyName {
+    PYDANTIC = 'pydantic',
+}
+
+export interface BaseModel {
+    child: string;
+    param: string;
+    response: string;
+    request: string;
+}
+
+export const REQUEST_LANGUAGE_MAP = {
+    [Language.PYTHON]: {
+        child: 'BaseModel',
+        param: 'TopParamBase',
+        response: 'TopResponseBase',
+        request: 'TopRequestBase',
+    } as BaseModel,
+};

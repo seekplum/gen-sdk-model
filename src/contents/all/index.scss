@@ -1,1 +1,10 @@
 // the style will be applied to all pages
+
+/* stylelint-disable selector-pseudo-class-no-unknown */
+:global {
+    .forceWrap {
+        word-break: break-all;
+        word-wrap: break-word;
+        white-space: pre-wrap;
+    }
+}

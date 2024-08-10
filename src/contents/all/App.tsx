@@ -1,36 +1,79 @@
+import { LeftCircleTwoTone, RightCircleTwoTone } from '@ant-design/icons';
 import { Flex, Spin, Typography } from 'antd';
 import { Observer } from 'mobx-react-lite';
 import * as React from 'react';
 
 import styles from './App.scss';
 import AppVM from './App.vm';
+import ReadOnlyCode from './code';
 
 const App: React.FC = () => {
     const vm = React.useMemo(() => new AppVM(), []);
+    const elemRef = React.useRef<HTMLDivElement>(null);
+
     return (
         <Observer>
-            {() =>
-                vm.isCollapsed ? null : (
-                    <Flex id={`${styles.plumChromeExtensionBox}`} vertical gap={4} align="center">
-                        {vm.initialized ? (
-                            <>
-                                <Flex gap={8} style={{ margin: '0 16px' }}>
-                                    <Typography.Title style={{ fontSize: 18 }}>
-                                        插件页面内容
-                                    </Typography.Title>
-                                </Flex>
-                                <Flex vertical gap={4}>
-                                    <Typography.Text>正文内容1</Typography.Text>
-                                    <Typography.Text>正文内容2</Typography.Text>
-                                    <Typography.Text>正文内容3</Typography.Text>
-                                </Flex>
-                            </>
+            {() => (
+                <Flex id={`${styles.plumChromeExtensionBox}`} gap={4}>
+                    <Flex align="baseline">
+                        {vm.config?.isExpanded ? (
+                            <RightCircleTwoTone
+                                onClick={vm.toggleCollapsed}
+                                style={{ fontSize: 30, cursor: 'pointer' }}
+                            />
                         ) : (
-                            <Spin />
+                            <LeftCircleTwoTone
+                                onClick={vm.toggleCollapsed}
+                                style={{ fontSize: 30, cursor: 'pointer' }}
+                            />
                         )}
                     </Flex>
-                )
-            }
+                    {vm.config ? (
+                        vm.config.isExpanded && (
+                            <Flex vertical className={styles.codeBox}>
+                                <div ref={elemRef}>
+                                    <Flex
+                                        gap={8}
+                                        style={{ margin: '0 16px' }}
+                                        justify="center"
+                                        align="center"
+                                    >
+                                        <Typography.Title style={{ fontSize: 18 }}>
+                                            自动生成SDK代码
+                                        </Typography.Title>
+                                    </Flex>
+                                    <Flex vertical gap={4}>
+                                        <Typography.Text>
+                                            请求参数可以精确的判断是否必选，响应参数无法精确，需要根据实际情况进行判断
+                                        </Typography.Text>
+                                        <Typography.Text>
+                                            响应参数建议按实际使用情况调整字段，只保留需要的字段
+                                        </Typography.Text>
+                                        <Typography.Text strong>
+                                            参数可以根据「描述」细化下类型定义，比如定义成枚举类型等(
+                                            <Typography.Text style={{ color: 'blue' }}>
+                                                底部有复制按钮
+                                            </Typography.Text>
+                                            )
+                                        </Typography.Text>
+                                    </Flex>
+                                </div>
+                                {vm.platformResponse ? (
+                                    <ReadOnlyCode
+                                        platform={vm.platformResponse.platform}
+                                        response={vm.platformResponse.response}
+                                        elemRef={elemRef}
+                                    />
+                                ) : (
+                                    <Spin />
+                                )}
+                            </Flex>
+                        )
+                    ) : (
+                        <Spin />
+                    )}
+                </Flex>
+            )}
         </Observer>
     );
 };

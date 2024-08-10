@@ -1,28 +1,44 @@
 import { CRX_NAME, EventNames, MessageModules } from '@/constants';
-import type { ContentMessageData, InjectionMessageData } from '@/utils';
+import type {
+  ContentMessageData,
+  InjectionMessageData,
+  PlatformResponseData,
+} from '@/utils';
 import * as printer from '@/utils/printer';
+
+import * as utils from './utils';
 
 printer.consoleLog('injected chrome extension data0');
 
-function sendMessageToContent(eventName: EventNames, data: any): void {
+function sendMessageToContent(
+    eventName: EventNames,
+    data: ContentMessageData<PlatformResponseData>,
+): void {
     window.postMessage(
         {
             origin: CRX_NAME,
             module: MessageModules.INJECT,
             eventName,
             data,
-        } as InjectionMessageData,
-        'https://github.com/*/*/issues',
+        } as InjectionMessageData<ContentMessageData>,
+        'https://op.jinritemai.com/docs/api-docs/*/*',
     );
 }
 
 function sendResponseToContent(method: string, url: string, responseText: string): void {
-    const data = { method, url, response: responseText };
+    const platform = utils.getRequestPlatform(window.location.host, method, url);
+    if (!platform) {
+        return;
+    }
+    const data = {
+        platform,
+        response: responseText,
+    } as PlatformResponseData;
     printer.consoleLog('injected chrome extension data1:', data);
     sendMessageToContent(EventNames.XHR_RESPONSE, {
         module: MessageModules.INJECT,
         data,
-    } as ContentMessageData);
+    } as ContentMessageData<PlatformResponseData>);
 }
 
 (function (xhr) {

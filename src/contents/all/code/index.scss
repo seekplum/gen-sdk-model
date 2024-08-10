@@ -1,0 +1,12 @@
+@use '~@/styles/color' as color;
+
+.codeWrapper {
+    margin-top: 16px;
+    overflow: scroll;
+    background-color: #202124;
+    border: 1px solid color.$static-gray-5;
+
+    .code {
+        color: #d4d4d4;
+    }
+}

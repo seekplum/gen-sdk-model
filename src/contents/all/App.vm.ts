@@ -1,6 +1,13 @@
-import { action, makeObservable, observable } from 'mobx';
+import { action, makeObservable, observable, runInAction } from 'mobx';
 
-import { defaultExtensionConfig, Extension } from '@/utils';
+import { CRX_NAME, EventNames, MessageModules } from '@/constants';
+import type { IExtensionConfig } from '@/typings';
+import type {
+  ContentMessageData,
+  InjectionMessageData,
+  PlatformResponseData,
+} from '@/utils';
+import { Extension } from '@/utils';
 
 class AppVM {
     constructor() {
@@ -10,20 +17,62 @@ class AppVM {
 
     @action
     init = () => {
+        window.addEventListener('message', this.handleMessage);
         this.fetchConfig();
     };
 
     @observable
-    initialized = false;
+    config: IExtensionConfig | null = null;
 
     @observable
-    isCollapsed = false;
+    platformResponse: PlatformResponseData | null = null;
 
     @action
     fetchConfig = async (): Promise<void> => {
         const config = await Extension.getConfig();
-        this.initialized = true;
-        this.isCollapsed = config.isCollapsed || defaultExtensionConfig.isCollapsed;
+        runInAction(() => {
+            this.config = config;
+        });
+    };
+
+    @action
+    toggleCollapsed = async () => {
+        if (!this.config) {
+            return;
+        }
+
+        this.config.isExpanded = !this.config.isExpanded;
+        await Extension.setConfig({
+            isExpanded: this.config.isExpanded,
+        });
+    };
+
+    @action
+    handleMessage = async (
+        event: MessageEvent<InjectionMessageData<ContentMessageData<PlatformResponseData>>>,
+    ) => {
+        if (event.origin !== location.origin) {
+            return;
+        }
+
+        const { data: eventData } = event;
+
+        if (eventData.origin !== CRX_NAME) {
+            return;
+        }
+
+        if (eventData.module !== MessageModules.INJECT) {
+            return;
+        }
+
+        if (![EventNames.XHR_RESPONSE, EventNames.FETCH_RESPONSE].includes(eventData.eventName)) {
+            return;
+        }
+        const { data: contentData } = eventData;
+        const { data } = contentData;
+        runInAction(() => {
+            this.platformResponse = data;
+        });
     };
 }
 

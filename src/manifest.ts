@@ -15,7 +15,7 @@ const manifest: Manifest.WebExtensionManifest = {
     },
     web_accessible_resources: [
         {
-            matches: ['<all_urls>'],
+            matches: ['https://op.jinritemai.com/*'],
             resources: ['js/inject.js', 'js/injected.js', 'icons/*', 'images/*', 'fonts/*'],
         },
     ],
@@ -24,7 +24,7 @@ const manifest: Manifest.WebExtensionManifest = {
     },
     content_scripts: [
         {
-            matches: ['https://github.com/*'],
+            matches: ['https://op.jinritemai.com/docs/api-docs/*/*'],
             css: ['css/all.css'],
             run_at: 'document_start',
             js: ['js/injected.js', 'js/all.js'],

@@ -1,14 +1,34 @@
 import { action, makeObservable, observable, runInAction } from 'mobx';
 
-import { EXTENSION_CONFIG_NAME } from '@/constants';
+import {
+  EXTENSION_CONFIG_NAME,
+  Language,
+  PartyName,
+  REQUEST_LANGUAGE_MAP,
+} from '@/constants';
 import type { IExtensionConfig } from '@/typings';
 
 import pkg from '../../package.json';
 
 export const VERSION = pkg.version;
 
+export const defaultLanguage = Language.PYTHON;
+
 export const defaultExtensionConfig = {
-    isCollapsed: false,
+    isExpanded: true,
+
+    needRemoved: false,
+    needDeprecated: false,
+    needExample: true,
+    needDescription: true,
+
+    language: defaultLanguage,
+    partyName: PartyName.PYDANTIC,
+
+    childBaseType: REQUEST_LANGUAGE_MAP[defaultLanguage].child,
+    paramBaseType: REQUEST_LANGUAGE_MAP[defaultLanguage].param,
+    responseBaseType: REQUEST_LANGUAGE_MAP[defaultLanguage].response,
+    requestBaseType: REQUEST_LANGUAGE_MAP[defaultLanguage].request,
 } as IExtensionConfig;
 
 export class Extension {

@@ -1,7 +1,7 @@
 import { action, makeObservable, observable } from 'mobx';
 
 import { MessageModules } from '@/constants';
-import { type ContentMessageData, Extension } from '@/utils';
+import { type ContentMessageData } from '@/utils';
 
 class ControlListVM {
     constructor() {
@@ -10,23 +10,10 @@ class ControlListVM {
     }
 
     @action
-    init = () => {
-        this.fetchConfig();
-    };
+    init = () => {};
 
     @observable
     initialized = false;
-
-    @observable
-    isCollapsed = false;
-
-    @action
-    setIsCollapsed = async () => {
-        this.isCollapsed = !this.isCollapsed;
-        await Extension.setConfig({
-            isCollapsed: this.isCollapsed,
-        });
-    };
 
     @action
     handleAdvanced = () => {
@@ -36,13 +23,6 @@ class ControlListVM {
                 cmd: 'popup.advanced',
             },
         } as ContentMessageData);
-    };
-
-    @action
-    fetchConfig = async () => {
-        const config = await Extension.getConfig();
-        this.initialized = true;
-        this.isCollapsed = config.isCollapsed;
     };
 }
 

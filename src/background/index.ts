@@ -19,8 +19,6 @@ chrome.runtime.onMessage.addListener(
             } else {
                 chrome.runtime.openOptionsPage();
             }
-        } else if (request.data.message === 'hello-from-content-script') {
-            printer.consoleLog('hello:', request.data.description);
         }
         sendResponse(`我是后台，我已收到你的消息: ${JSON.stringify(request)}`);
     },

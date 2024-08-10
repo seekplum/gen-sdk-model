@@ -1,4 +1,4 @@
-import type { EventNames, MessageModules } from '@/constants';
+import type { EventNames, MessageModules, Platform } from '@/constants';
 
 export interface XHRInterceptorResponse {
     url: string;
@@ -16,6 +16,11 @@ export interface InjectionEventMapping {
     [EventNames.XHR_REQUEST]: Document | XMLHttpRequestBodyInit | null | undefined;
     [EventNames.XHR_RESPONSE]: XHRInterceptorResponse;
     [EventNames.FETCH_RESPONSE]: FetchInterceptorResponse;
+}
+
+export interface PlatformResponseData {
+    platform: Platform;
+    response: string;
 }
 
 export interface ContentMessageData<T = any> {
