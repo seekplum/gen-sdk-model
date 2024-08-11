@@ -9,11 +9,15 @@
     .copyWrapper {
         position: relative;
 
-        .copy {
+        .copyContainer {
             position: absolute;
             top: 0;
-            right: 0;
-            font-size: 22px;
+            right: 22px;
+
+            .copy {
+                position: fixed;
+                font-size: 22px;
+            }
         }
     }
 

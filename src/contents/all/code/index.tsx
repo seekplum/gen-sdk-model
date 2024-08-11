@@ -37,17 +37,16 @@ function Code({ codes, elemRef }: { codes: string[]; elemRef: React.RefObject<HT
         <Flex gap={4} className={styles.codeBox} style={{ height: windowHeight - tipsHeight - 12 }}>
             <Flex vertical className={styles.numWrapper}>
                 {Array.from({ length: codes.length }, (_, idx) => idx + 1).map((idx) => (
-                    <Typography.Text
-                        key={idx + 1}
-                        className={classNames('forceNoWrap', styles.num)}
-                    >
-                        {idx + 1}
+                    <Typography.Text key={idx} className={classNames('forceNoWrap', styles.num)}>
+                        {idx}
                     </Typography.Text>
                 ))}
             </Flex>
             <Flex vertical className={styles.codeWrapper}>
                 <div className={styles.copyWrapper}>
-                    <CopyTwoTone onClick={handleCopy} className={styles.copy} />
+                    <div className={styles.copyContainer}>
+                        <CopyTwoTone onClick={handleCopy} className={styles.copy} />
+                    </div>
                 </div>
                 {codes.map((line, idx) => {
                     return (
