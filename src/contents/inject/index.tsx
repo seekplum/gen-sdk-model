@@ -1,3 +1,5 @@
+/// <reference path="index.d.ts" />
+
 import { CRX_NAME, EventNames, MessageModules } from '@/constants';
 import type {
   ContentMessageData,
@@ -44,42 +46,40 @@ function sendResponseToContent(method: string, url: string, responseText: string
 (function (xhr) {
     const XHR = xhr.prototype;
 
-    const oldOpen = XHR.open;
-    const oldSend = XHR.send;
+    const originalOpen = XHR.open;
+    const originalSend = XHR.send;
 
-    XHR.open = function (method, url) {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
+    XHR.open = function (method: string, url: string) {
         this._method = method;
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
         this._url = url;
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        return oldOpen.apply(this, arguments); // eslint-disable-line unicorn/prefer-reflect-apply, prefer-rest-params
+        return originalOpen.apply(this, arguments); // eslint-disable-line unicorn/prefer-reflect-apply, prefer-rest-params
     };
 
-    XHR.send = function (_) {
-        this.addEventListener('load', function () {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-expect-error
-            const url = this._url;
-            if (!url) {
-                return;
-            }
-            if (!(this.responseType !== 'blob' && this.responseText)) {
-                return;
-            }
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-expect-error
-            const method = this._method;
-
-            sendResponseToContent(method, url, this.responseText);
+    XHR.send = function (...sendArgs) {
+        this.addEventListener('load', () => {
+            this.mySendResponse();
         });
+        this.addEventListener('readyStateChange', () => {
+            if (this.readyState === 4) {
+                this.mySendResponse();
+            }
+        });
+        return originalSend.apply(this, sendArgs);
+    };
 
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        return oldSend.apply(this, arguments); // eslint-disable-line unicorn/prefer-reflect-apply, prefer-rest-params
+    XHR.mySendResponse = function () {
+        const url = this._url;
+        if (!url) {
+            return;
+        }
+        if (!(this.responseType !== 'blob' && this.responseText)) {
+            return;
+        }
+        const method = this._method;
+
+        sendResponseToContent(method, url, this.responseText);
     };
 })(XMLHttpRequest);
 
@@ -101,4 +101,5 @@ window.fetch = function (url, options) {
     });
     return fch;
 };
+
 export default undefined;

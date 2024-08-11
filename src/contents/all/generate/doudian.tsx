@@ -28,7 +28,11 @@ function isRequired(param: IParam) {
 }
 
 function isDeprecated(param: IParam): boolean {
-    return !!param.description && param.description.includes('【即将废弃】');
+    return (
+        !!param.description &&
+        (param.description.includes('【即将废弃】') ||
+            (param.description.startsWith('【该字段将在') && param.description.includes('下线')))
+    );
 }
 function isRemoved(param: IParam): boolean {
     return !!param.description && param.description.includes('【已废弃】');

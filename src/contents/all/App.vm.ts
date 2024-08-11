@@ -19,7 +19,15 @@ class AppVM {
     init = () => {
         window.addEventListener('message', this.handleMessage);
         this.fetchConfig();
+        setTimeout(() => {
+            runInAction(() => {
+                this.initialized = true;
+            });
+        }, 5 * 1000);
     };
+
+    @observable
+    initialized = false;
 
     @observable
     config: IExtensionConfig | null = null;

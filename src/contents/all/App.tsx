@@ -64,6 +64,10 @@ const App: React.FC = () => {
                                         response={vm.platformResponse.response}
                                         elemRef={elemRef}
                                     />
+                                ) : vm.initialized ? (
+                                    <Typography.Text strong type="danger">
+                                        获取请求数据失败，请尝试刷新页面，或者切换其它接口后再返回
+                                    </Typography.Text>
                                 ) : (
                                     <Spin />
                                 )}

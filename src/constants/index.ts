@@ -1,5 +1,6 @@
 export const CRX_NAME = 'plum-crx';
 export const EXTENSION_CONFIG_NAME = 'extensionConfig';
+export const MAX_ROWS = 30;
 
 export enum MessageModules {
     CONTENT = 'content',

@@ -1,12 +1,25 @@
 @use '~@/styles/color' as color;
 
-.codeWrapper {
+.codeBox {
     margin-top: 16px;
     overflow: scroll;
     background-color: #202124;
     border: 1px solid color.$static-gray-5;
 
-    .code {
-        color: #d4d4d4;
+    .numWrapper {
+        width: 62px;
+        text-align: end;
+        white-space: nowrap;
+        vertical-align: middle;
+
+        .num {
+            color: #858585;
+        }
+    }
+
+    .codeWrapper {
+        .code {
+            color: #d4d4d4;
+        }
     }
 }
