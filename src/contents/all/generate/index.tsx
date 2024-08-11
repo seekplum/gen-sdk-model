@@ -34,7 +34,7 @@ function generateByPydantic(param: RequestTypes.RequestModel, config: IExtension
         }
         const args = [];
         if (config.needDescription) {
-            args.push(`description="${childParam.description}"`);
+            args.push(`description="${childParam.description.replaceAll('\n', '')}"`);
         }
         if (config.needExample) {
             args.push(`json_schema_extra={"example": "${childParam.example}"}`);
@@ -46,7 +46,7 @@ function generateByPydantic(param: RequestTypes.RequestModel, config: IExtension
     if (param.childParams.length === 0) {
         rawCodes.push('    pass');
     }
-    rawCodes.push('', '');
+    rawCodes.push('    ', '    ');
     return rawCodes;
 }
 
@@ -80,6 +80,7 @@ export function generate(platform: Platform, response: string, config: IExtensio
         `class ${requestData.methodName}Request(${config.requestBaseType}):`,
         `    method: str = "${requestData.methodName}"`,
         `    param: ${requestData.params[requestData.params.length - 1].className}`,
+        '    ',
     );
     return rawCodes;
 }

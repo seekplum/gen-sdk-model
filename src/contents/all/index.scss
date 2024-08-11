@@ -7,4 +7,10 @@
         word-wrap: break-word !important;
         white-space: pre-wrap !important;
     }
+
+    .forceNoWrap {
+        word-break: keep-all !important;
+        word-wrap: normal !important;
+        white-space: pre !important;
+    }
 }

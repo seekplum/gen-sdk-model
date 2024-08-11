@@ -52,7 +52,7 @@ const App: React.FC = () => {
                                         <Typography.Text strong>
                                             参数可以根据「描述」细化下类型定义，比如定义成枚举类型等(
                                             <Typography.Text style={{ color: 'blue' }}>
-                                                底部有复制按钮
+                                                第一行末尾有复制按钮
                                             </Typography.Text>
                                             )
                                         </Typography.Text>

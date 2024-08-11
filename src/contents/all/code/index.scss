@@ -2,22 +2,37 @@
 
 .codeBox {
     margin-top: 16px;
-    overflow: scroll;
+    overflow: hidden;
     background-color: #202124;
     border: 1px solid color.$static-gray-5;
 
+    .copyWrapper {
+        position: relative;
+
+        .copy {
+            position: absolute;
+            top: 0;
+            right: 0;
+            font-size: 22px;
+        }
+    }
+
     .numWrapper {
-        width: 62px;
-        text-align: end;
-        white-space: nowrap;
-        vertical-align: middle;
+        width: 32px;
+        margin-right: 16px;
 
         .num {
             color: #858585;
+            text-align: end;
+            vertical-align: middle;
         }
     }
 
     .codeWrapper {
+        max-width: 712px;
+        overflow: scroll;
+        white-space: pre;
+
         .code {
             color: #d4d4d4;
         }

@@ -1,40 +1,62 @@
+import { CopyTwoTone } from '@ant-design/icons';
 import { Flex, Spin, Typography } from 'antd';
 import classNames from 'classnames';
 import { Observer } from 'mobx-react-lite';
 import * as React from 'react';
 
-import type { Platform } from '@/constants';
-import * as printer from '@/utils/printer';
+import { type Platform } from '@/constants';
 
 import { generate } from '../generate';
 import styles from './index.scss';
 import IndexVM from './index.vm';
 
 function Code({ codes, elemRef }: { codes: string[]; elemRef: React.RefObject<HTMLDivElement> }) {
-    const [expanded, setExpanded] = React.useState(false);
     const [tipsHeight, setTipsHeight] = React.useState(105);
-    const docHeight = document.body?.scrollHeight || document.documentElement?.scrollHeight || 800;
+    const [windowHeight, setWindowHeight] = React.useState(window.innerHeight);
+    const handleCopy = React.useCallback(() => {
+        navigator.clipboard.writeText(codes.join('\n'));
+    }, [codes]);
+
     React.useEffect(() => {
         if (elemRef.current) {
             setTipsHeight(elemRef.current.clientHeight);
         }
     }, [elemRef]);
-    printer.consoleLog(codes.join('\n'));
+    React.useEffect(() => {
+        function handleResize() {
+            setWindowHeight(window.innerHeight);
+        }
+
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
+    }, []);
     return (
-        <Flex className={styles.codeWrapper} style={{ height: docHeight - tipsHeight - 12 }}>
-            <Typography.Paragraph
-                className={classNames('forceWrap', styles.code)}
-                copyable={{ text: codes.join('\n'), tabIndex: 0 }}
-                ellipsis={{
-                    rows: 30,
-                    expandable: 'collapsible',
-                    expanded,
-                    onExpand: (_, info) => setExpanded(info.expanded),
-                    symbol: '展开',
-                }}
-            >
-                {codes.join('\n')}
-            </Typography.Paragraph>
+        <Flex gap={4} className={styles.codeBox} style={{ height: windowHeight - tipsHeight - 12 }}>
+            <Flex vertical className={styles.numWrapper}>
+                {Array.from({ length: codes.length }, (_, idx) => idx + 1).map((idx) => (
+                    <Typography.Text
+                        key={idx + 1}
+                        className={classNames('forceNoWrap', styles.num)}
+                    >
+                        {idx + 1}
+                    </Typography.Text>
+                ))}
+            </Flex>
+            <Flex vertical className={styles.codeWrapper}>
+                <div className={styles.copyWrapper}>
+                    <CopyTwoTone onClick={handleCopy} className={styles.copy} />
+                </div>
+                {codes.map((line, idx) => {
+                    return (
+                        <div key={idx} className={styles.code}>
+                            {line}
+                        </div>
+                    );
+                })}
+            </Flex>
         </Flex>
     );
 }
