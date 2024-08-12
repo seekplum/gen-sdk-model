@@ -21,3 +21,7 @@ export function resolveServer(...args: string[]) {
 export function resolveSrc(...args: string[]) {
     return resolveProject('src', ...args);
 }
+
+export function resolveNodeModules(...args: string[]) {
+    return resolveProject('node_modules', ...args);
+}

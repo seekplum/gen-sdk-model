@@ -1,8 +1,9 @@
 import { CopyTwoTone } from '@ant-design/icons';
-import { Flex, Spin, Typography } from 'antd';
-import classNames from 'classnames';
+import { message, Spin } from 'antd';
 import { Observer } from 'mobx-react-lite';
 import * as React from 'react';
+import SyntaxHighlighter from 'react-syntax-highlighter';
+import { vs2015 } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
 import { type Platform } from '@/constants';
 
@@ -10,18 +11,34 @@ import { generate } from '../generate';
 import styles from './index.scss';
 import IndexVM from './index.vm';
 
-function Code({ codes, elemRef }: { codes: string[]; elemRef: React.RefObject<HTMLDivElement> }) {
-    const [tipsHeight, setTipsHeight] = React.useState(105);
-    const [windowHeight, setWindowHeight] = React.useState(window.innerHeight);
-    const handleCopy = React.useCallback(() => {
-        navigator.clipboard.writeText(codes.join('\n'));
-    }, [codes]);
+export interface ReadOnlyCodeProps {
+    tipsHeight: number;
+    language: string;
+    platform: Platform;
+    response: string;
+}
 
-    React.useEffect(() => {
-        if (elemRef.current) {
-            setTipsHeight(elemRef.current.clientHeight);
-        }
-    }, [elemRef]);
+interface HighlighterCodeProps {
+    tipsHeight: number;
+    language: string;
+    codes: string[];
+}
+
+function HighlighterCode(props: HighlighterCodeProps) {
+    const { codes, tipsHeight, language } = props;
+    const rawCode = codes.join('\n');
+    const [windowHeight, setWindowHeight] = React.useState(window.innerHeight);
+
+    const [messageApi, contextHolder] = message.useMessage();
+
+    const handleCopy = React.useCallback(() => {
+        navigator.clipboard.writeText(rawCode);
+        messageApi.open({
+            type: 'success',
+            content: '复制代码成功',
+        });
+    }, [rawCode]);
+
     React.useEffect(() => {
         function handleResize() {
             setWindowHeight(window.innerHeight);
@@ -34,47 +51,33 @@ function Code({ codes, elemRef }: { codes: string[]; elemRef: React.RefObject<HT
         };
     }, []);
     return (
-        <Flex gap={4} className={styles.codeBox} style={{ height: windowHeight - tipsHeight - 12 }}>
-            <Flex vertical className={styles.numWrapper}>
-                {Array.from({ length: codes.length }, (_, idx) => idx + 1).map((idx) => (
-                    <Typography.Text key={idx} className={classNames('forceNoWrap', styles.num)}>
-                        {idx}
-                    </Typography.Text>
-                ))}
-            </Flex>
-            <Flex vertical className={styles.codeWrapper}>
-                <div className={styles.copyWrapper}>
-                    <div className={styles.copyContainer}>
-                        <CopyTwoTone onClick={handleCopy} className={styles.copy} />
-                    </div>
+        <div className={styles.codeBox}>
+            <div className={styles.copyWrapper}>
+                <div className={styles.copyContainer}>
+                    {contextHolder}
+                    <CopyTwoTone onClick={handleCopy} className={styles.copy} />
                 </div>
-                {codes.map((line, idx) => {
-                    return (
-                        <div key={idx} className={styles.code}>
-                            {line}
-                        </div>
-                    );
-                })}
-            </Flex>
-        </Flex>
+            </div>
+            <SyntaxHighlighter
+                showLineNumbers={true}
+                language={language}
+                style={vs2015}
+                customStyle={{ height: windowHeight - tipsHeight - 48 }}
+            >
+                {rawCode}
+            </SyntaxHighlighter>
+        </div>
     );
 }
 
-function ReadOnlyCode({
-    platform,
-    response,
-    elemRef,
-}: {
-    platform: Platform;
-    response: string;
-    elemRef: React.RefObject<HTMLDivElement>;
-}) {
+export function ReadOnlyCode(props: ReadOnlyCodeProps) {
     const vm = React.useMemo(() => new IndexVM(), []);
+    const { platform, response, ...extra } = props;
     return (
         <Observer>
             {() =>
                 vm.initialized && !!vm.config ? (
-                    <Code codes={generate(platform, response, vm.config)} elemRef={elemRef} />
+                    <HighlighterCode {...extra} codes={generate(platform, response, vm.config)} />
                 ) : (
                     <Spin />
                 )
@@ -82,5 +85,3 @@ function ReadOnlyCode({
         </Observer>
     );
 }
-
-export default ReadOnlyCode;

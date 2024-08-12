@@ -5,11 +5,18 @@ import * as React from 'react';
 
 import styles from './App.scss';
 import AppVM from './App.vm';
-import ReadOnlyCode from './code';
+import { ReadOnlyCode } from './code';
 
 const App: React.FC = () => {
+    const [tipsHeight, setTipsHeight] = React.useState(105);
     const vm = React.useMemo(() => new AppVM(), []);
     const elemRef = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+        if (elemRef.current) {
+            setTipsHeight(elemRef.current.clientHeight);
+        }
+    }, [elemRef]);
 
     return (
         <Observer>
@@ -31,7 +38,7 @@ const App: React.FC = () => {
                     {vm.config ? (
                         vm.config.isExpanded && (
                             <Flex vertical className={styles.codeBox}>
-                                <div ref={elemRef}>
+                                <div ref={elemRef} style={{ marginBottom: 16 }}>
                                     <Flex
                                         gap={8}
                                         style={{ margin: '0 16px' }}
@@ -52,7 +59,7 @@ const App: React.FC = () => {
                                         <Typography.Text strong>
                                             参数可以根据「描述」细化下类型定义，比如定义成枚举类型等(
                                             <Typography.Text style={{ color: 'blue' }}>
-                                                第一行末尾有复制按钮
+                                                复制按钮在右上角
                                             </Typography.Text>
                                             )
                                         </Typography.Text>
@@ -60,9 +67,10 @@ const App: React.FC = () => {
                                 </div>
                                 {vm.platformResponse ? (
                                     <ReadOnlyCode
+                                        tipsHeight={tipsHeight}
+                                        language={vm.config.language}
                                         platform={vm.platformResponse.platform}
                                         response={vm.platformResponse.response}
-                                        elemRef={elemRef}
                                     />
                                 ) : vm.initialized ? (
                                     <Typography.Text strong type="danger">
