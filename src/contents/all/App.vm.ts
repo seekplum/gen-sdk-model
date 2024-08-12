@@ -1,6 +1,11 @@
 import { action, makeObservable, observable, runInAction } from 'mobx';
 
-import { CRX_NAME, EventNames, MessageModules } from '@/constants';
+import {
+  CRX_NAME,
+  EventNames,
+  MessageModules,
+  type Platform,
+} from '@/constants';
 import type { IExtensionConfig } from '@/typings';
 import type {
   ContentMessageData,
@@ -8,6 +13,7 @@ import type {
   PlatformResponseData,
 } from '@/utils';
 import { Extension } from '@/utils';
+import { parsePlatform } from '@/utils/utils';
 
 class AppVM {
     constructor() {
@@ -19,6 +25,7 @@ class AppVM {
     init = () => {
         window.addEventListener('message', this.handleMessage);
         this.fetchConfig();
+        this.platform = parsePlatform(location.host);
         setTimeout(() => {
             runInAction(() => {
                 this.initialized = true;
@@ -31,6 +38,9 @@ class AppVM {
 
     @observable
     config: IExtensionConfig | null = null;
+
+    @observable
+    platform: Platform | null = null;
 
     @observable
     platformResponse: PlatformResponseData | null = null;

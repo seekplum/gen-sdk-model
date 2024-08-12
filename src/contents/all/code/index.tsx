@@ -7,20 +7,25 @@ import { vs2015 } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
 import { type Platform } from '@/constants';
 
-import { generate } from '../generate';
+import { generate, generateByDocument } from '../generate';
 import styles from './index.scss';
 import IndexVM from './index.vm';
 
-export interface ReadOnlyCodeProps {
+interface BaseProps {
     tipsHeight: number;
     language: string;
+}
+
+export interface ReadOnlyCodeProps extends BaseProps {
     platform: Platform;
     response: string;
 }
 
-interface HighlighterCodeProps {
-    tipsHeight: number;
-    language: string;
+export interface DocumentCodeProps extends BaseProps {
+    platform: Platform;
+}
+
+interface HighlighterCodeProps extends BaseProps {
     codes: string[];
 }
 
@@ -78,6 +83,22 @@ export function ReadOnlyCode(props: ReadOnlyCodeProps) {
             {() =>
                 vm.initialized && !!vm.config ? (
                     <HighlighterCode {...extra} codes={generate(platform, response, vm.config)} />
+                ) : (
+                    <Spin />
+                )
+            }
+        </Observer>
+    );
+}
+
+export function DocumentCode(props: DocumentCodeProps) {
+    const vm = React.useMemo(() => new IndexVM(), []);
+    const { platform, ...extra } = props;
+    return (
+        <Observer>
+            {() =>
+                vm.initialized && !!vm.config ? (
+                    <HighlighterCode {...extra} codes={generateByDocument(platform, vm.config)} />
                 ) : (
                     <Spin />
                 )

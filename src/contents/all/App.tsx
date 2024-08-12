@@ -3,9 +3,11 @@ import { Flex, Spin, Typography } from 'antd';
 import { Observer } from 'mobx-react-lite';
 import * as React from 'react';
 
+import { Platform } from '@/constants';
+
 import styles from './App.scss';
 import AppVM from './App.vm';
-import { ReadOnlyCode } from './code';
+import { DocumentCode, ReadOnlyCode } from './code';
 
 const App: React.FC = () => {
     const [tipsHeight, setTipsHeight] = React.useState(105);
@@ -71,6 +73,12 @@ const App: React.FC = () => {
                                         language={vm.config.language}
                                         platform={vm.platformResponse.platform}
                                         response={vm.platformResponse.response}
+                                    />
+                                ) : vm.platform === Platform.WEIXIN ? (
+                                    <DocumentCode
+                                        tipsHeight={tipsHeight}
+                                        language={vm.config.language}
+                                        platform={vm.platform}
                                     />
                                 ) : vm.initialized ? (
                                     <Typography.Text strong type="danger">

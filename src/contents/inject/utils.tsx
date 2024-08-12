@@ -1,13 +1,5 @@
 import { Platform } from '@/constants';
-
-function getPlatform(host: string): Platform | null {
-    switch (host) {
-        case 'op.jinritemai.com':
-            return Platform.DOUDIAN;
-        default:
-            return null;
-    }
-}
+import { parsePlatform } from '@/utils/utils';
 
 function checkRequestRequired(platform: Platform, method: string, url: string): boolean {
     return (
@@ -18,7 +10,7 @@ function checkRequestRequired(platform: Platform, method: string, url: string): 
 }
 
 export function getRequestPlatform(host: string, method: string, url: string): Platform | null {
-    const platform = getPlatform(host);
+    const platform = parsePlatform(host);
     if (!platform) {
         return null;
     }

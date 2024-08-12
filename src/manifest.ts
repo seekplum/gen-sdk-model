@@ -15,7 +15,7 @@ const manifest: Manifest.WebExtensionManifest = {
     },
     web_accessible_resources: [
         {
-            matches: ['https://op.jinritemai.com/*'],
+            matches: ['https://op.jinritemai.com/*', 'https://developers.weixin.qq.com/*'],
             resources: ['js/inject.js', 'js/injected.js', 'icons/*', 'images/*', 'fonts/*'],
         },
     ],
@@ -24,7 +24,10 @@ const manifest: Manifest.WebExtensionManifest = {
     },
     content_scripts: [
         {
-            matches: ['https://op.jinritemai.com/docs/api-docs/*/*'],
+            matches: [
+                'https://op.jinritemai.com/docs/api-docs/*/*',
+                'https://developers.weixin.qq.com/doc/channels/API/*',
+            ],
             css: ['css/all.css'],
             run_at: 'document_start',
             js: ['js/injected.js', 'js/all.js'],

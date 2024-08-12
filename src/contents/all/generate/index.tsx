@@ -62,9 +62,6 @@ function generateByPython(
 }
 
 export function generate(platform: Platform, response: string, config: IExtensionConfig): string[] {
-    if (config.language !== Language.PYTHON) {
-        throw new Error(`Unsupported language: ${config.language}`);
-    }
     const rawCodes: string[] = [];
     let requestData: RequestTypes.RequestData | null = null;
     if (platform === Platform.DOUDIAN) {
@@ -72,6 +69,9 @@ export function generate(platform: Platform, response: string, config: IExtensio
     }
     if (!requestData) {
         throw new Error(`Unsupported platform: ${platform}`);
+    }
+    if (config.language !== Language.PYTHON) {
+        throw new Error(`Unsupported language: ${config.language}`);
     }
     for (const param of requestData.params) {
         rawCodes.push(...generateByPython(platform, param, config));
@@ -87,4 +87,15 @@ export function generate(platform: Platform, response: string, config: IExtensio
         '    ',
     );
     return rawCodes;
+}
+
+export function generateByDocument(platform: Platform, config: IExtensionConfig): string[] {
+    const requestConfig = config.modelConfig[platform];
+    return [
+        `platform: ${platform}`,
+        `child_base_type: ${requestConfig.childBaseType}`,
+        `param_base_type: ${requestConfig.paramBaseType}`,
+        `response_base_type: ${requestConfig.responseBaseType}`,
+        `request_base_type: ${requestConfig.requestBaseType}`,
+    ];
 }
