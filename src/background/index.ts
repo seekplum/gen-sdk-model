@@ -26,4 +26,13 @@ chrome.runtime.onMessage.addListener(
 
 printer.consoleLog('This is background page!');
 
+chrome.runtime.onInstalled.addListener(async () => {
+    // // 移除所有数据
+    // chrome.storage.local.clear();
+
+    // 获取所有local存储的数据
+    chrome.storage.local.get(null, (locals) => {
+        printer.consoleLog('locals:', JSON.stringify(locals));
+    });
+});
 export default undefined;

@@ -18,7 +18,13 @@ export enum EventNames {
 
 export enum Platform {
     DOUDIAN = 'doudian',
+    WEIXIN = 'weixin',
 }
+
+export const PlatformNames = {
+    [Platform.DOUDIAN]: '抖店',
+    [Platform.WEIXIN]: '微信',
+};
 
 export enum VariableTypes {
     STRING = 'str',
@@ -37,11 +43,8 @@ export enum ModelTypes {
 }
 
 export enum Language {
-    PYTHON = 'python',
-}
-
-export enum PartyName {
-    PYDANTIC = 'pydantic',
+    PYTHON = 'Python',
+    TYPESCRIPT = 'TypeScript',
 }
 
 export interface BaseModel {
@@ -51,11 +54,17 @@ export interface BaseModel {
     request: string;
 }
 
-export const REQUEST_LANGUAGE_MAP = {
-    [Language.PYTHON]: {
+export const REQUEST_PLATFORM_MAP = {
+    [Platform.DOUDIAN]: {
         child: 'BaseModel',
         param: 'TopParamBase',
         response: 'TopResponseBase',
         request: 'TopRequestBase',
+    } as BaseModel,
+    [Platform.WEIXIN]: {
+        child: 'BaseModel',
+        param: 'WopParamBase',
+        response: 'WopResponseBase',
+        request: 'WopRequestBase',
     } as BaseModel,
 };

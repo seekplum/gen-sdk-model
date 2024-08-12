@@ -3,16 +3,30 @@ import { action, makeObservable, observable, runInAction } from 'mobx';
 import {
   EXTENSION_CONFIG_NAME,
   Language,
-  PartyName,
-  REQUEST_LANGUAGE_MAP,
+  Platform,
+  REQUEST_PLATFORM_MAP,
 } from '@/constants';
-import type { IExtensionConfig } from '@/typings';
+import type { IExtensionConfig, IRequestConfig } from '@/typings';
 
 import pkg from '../../package.json';
 
 export const VERSION = pkg.version;
 
 export const defaultLanguage = Language.PYTHON;
+
+export const defaultDoudianRequestConfig = {
+    childBaseType: REQUEST_PLATFORM_MAP[Platform.DOUDIAN].child,
+    paramBaseType: REQUEST_PLATFORM_MAP[Platform.DOUDIAN].param,
+    responseBaseType: REQUEST_PLATFORM_MAP[Platform.DOUDIAN].response,
+    requestBaseType: REQUEST_PLATFORM_MAP[Platform.DOUDIAN].request,
+} as IRequestConfig;
+
+export const defaultWeixinRequestConfig = {
+    childBaseType: REQUEST_PLATFORM_MAP[Platform.WEIXIN].child,
+    paramBaseType: REQUEST_PLATFORM_MAP[Platform.WEIXIN].param,
+    responseBaseType: REQUEST_PLATFORM_MAP[Platform.WEIXIN].response,
+    requestBaseType: REQUEST_PLATFORM_MAP[Platform.WEIXIN].request,
+} as IRequestConfig;
 
 export const defaultExtensionConfig = {
     isExpanded: true,
@@ -23,12 +37,11 @@ export const defaultExtensionConfig = {
     needDescription: true,
 
     language: defaultLanguage,
-    partyName: PartyName.PYDANTIC,
 
-    childBaseType: REQUEST_LANGUAGE_MAP[defaultLanguage].child,
-    paramBaseType: REQUEST_LANGUAGE_MAP[defaultLanguage].param,
-    responseBaseType: REQUEST_LANGUAGE_MAP[defaultLanguage].response,
-    requestBaseType: REQUEST_LANGUAGE_MAP[defaultLanguage].request,
+    modelConfig: {
+        [Platform.DOUDIAN]: defaultDoudianRequestConfig,
+        [Platform.WEIXIN]: defaultWeixinRequestConfig,
+    },
 } as IExtensionConfig;
 
 export class Extension {
@@ -36,15 +49,14 @@ export class Extension {
         const data = await chrome.storage.local.get(EXTENSION_CONFIG_NAME);
         return {
             ...defaultExtensionConfig,
-            ...data.extensionConfig,
+            ...data[EXTENSION_CONFIG_NAME],
         };
     };
 
-    static setConfig = async (record: Partial<Record<string, any>>) => {
+    static setConfig = async (record: Partial<IExtensionConfig>) => {
         const config = await Extension.getConfig();
-
         await chrome.storage.local.set({
-            extensionConfig: {
+            [EXTENSION_CONFIG_NAME]: {
                 ...config,
                 ...record,
             },
@@ -61,10 +73,6 @@ export class Extension {
         makeObservable(this);
         this.init();
     }
-
-    setConfig = (record: Partial<Record<string, any>>) => {
-        return Extension.setConfig(record);
-    };
 
     @action
     private init = async () => {

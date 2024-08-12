@@ -1,3 +1,17 @@
+import type { Platform } from '@/constants';
+
+export interface IRequestConfig {
+    childBaseType: string;
+    paramBaseType: string;
+    responseBaseType: string;
+    requestBaseType: string;
+}
+
+export interface IModelConfig {
+    [Platform.DOUDIAN]: IRequestConfig;
+    [Platform.WEIXIN]: IRequestConfig;
+}
+
 export interface IExtensionConfig {
     isExpanded: boolean;
 
@@ -7,10 +21,6 @@ export interface IExtensionConfig {
     needDescription: boolean;
 
     language: string;
-    partyName: string;
 
-    childBaseType: string;
-    paramBaseType: string;
-    responseBaseType: string;
-    requestBaseType: string;
+    modelConfig: IModelConfig;
 }

@@ -1,1 +1,1 @@
-export { DefaultExtensionConfig, IExtensionConfig } from './config';
+export * from './config';

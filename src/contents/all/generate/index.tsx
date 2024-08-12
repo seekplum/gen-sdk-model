@@ -1,29 +1,40 @@
-import { Language, ModelTypes, PartyName, Platform } from '@/constants';
+import { Language, ModelTypes, Platform } from '@/constants';
 import type { IExtensionConfig } from '@/typings';
 import type * as RequestTypes from '@/typings/request';
 
 import { generate as generateDoudian } from './doudian';
 
-function getParentModelName(modelType: string, config: IExtensionConfig): string {
+function getParentModelName(
+    platform: Platform,
+    modelType: string,
+    config: IExtensionConfig,
+): string {
+    const requestConfig = config.modelConfig[platform];
     switch (modelType) {
         case ModelTypes.PARAM:
-            return config.paramBaseType;
+            return requestConfig.paramBaseType;
         case ModelTypes.RESPONSE:
-            return config.responseBaseType;
+            return requestConfig.responseBaseType;
         case ModelTypes.REQUEST:
-            return config.requestBaseType;
+            return requestConfig.requestBaseType;
         case ModelTypes.CHILD:
-            return config.childBaseType;
+            return requestConfig.childBaseType;
         default:
-            throw new Error(`Unsupported parent model type: ${modelType}`);
+            throw new Error(
+                `Unsupported parent model type: ${modelType} for platform: ${platform}`,
+            );
     }
 }
 
-function generateByPydantic(param: RequestTypes.RequestModel, config: IExtensionConfig): string[] {
+function generateByPython(
+    platform: Platform,
+    param: RequestTypes.RequestModel,
+    config: IExtensionConfig,
+): string[] {
     const rawCodes: string[] = [];
 
     rawCodes.push(
-        `class ${param.className}(${getParentModelName(param.parentModelType, config)}):`,
+        `class ${param.className}(${getParentModelName(platform, param.parentModelType, config)}):`,
     );
     for (const childParam of param.childParams) {
         if (childParam.removed && !config.needRemoved) {
@@ -54,9 +65,6 @@ export function generate(platform: Platform, response: string, config: IExtensio
     if (config.language !== Language.PYTHON) {
         throw new Error(`Unsupported language: ${config.language}`);
     }
-    if (config.partyName !== PartyName.PYDANTIC) {
-        throw new Error(`Unsupported party: ${config.partyName}`);
-    }
     const rawCodes: string[] = [];
     let requestData: RequestTypes.RequestData | null = null;
     if (platform === Platform.DOUDIAN) {
@@ -66,18 +74,14 @@ export function generate(platform: Platform, response: string, config: IExtensio
         throw new Error(`Unsupported platform: ${platform}`);
     }
     for (const param of requestData.params) {
-        if (config.partyName === PartyName.PYDANTIC) {
-            rawCodes.push(...generateByPydantic(param, config));
-        }
+        rawCodes.push(...generateByPython(platform, param, config));
     }
     for (const param of requestData.responses) {
-        if (config.partyName === PartyName.PYDANTIC) {
-            rawCodes.push(...generateByPydantic(param, config));
-        }
+        rawCodes.push(...generateByPython(platform, param, config));
     }
 
     rawCodes.push(
-        `class ${requestData.methodName}Request(${config.requestBaseType}):`,
+        `class ${requestData.methodName}Request(${config.modelConfig[platform].requestBaseType}):`,
         `    method: str = "${requestData.methodName}"`,
         `    param: ${requestData.params[requestData.params.length - 1].className}`,
         '    ',
