@@ -1,4 +1,4 @@
-import type { Platform } from '@/constants';
+import type { Language, Platform } from '@/constants';
 
 export interface IRequestConfig {
     childBaseType: string;
@@ -20,7 +20,7 @@ export interface IExtensionConfig {
     needExample: boolean;
     needDescription: boolean;
 
-    language: string;
+    language: Language;
 
     modelConfig: IModelConfig;
 }

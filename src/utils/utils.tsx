@@ -15,3 +15,7 @@ export function parsePlatform(host: string): Platform | null {
             return null;
     }
 }
+
+export function removeSpecialCharacters(value: string): string {
+    return value.replaceAll('\n', '').replaceAll('\\"', '').replaceAll('"', '');
+}

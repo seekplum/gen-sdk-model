@@ -5,7 +5,7 @@ import * as React from 'react';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { vs2015 } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
-import { type Platform } from '@/constants';
+import type { Language, Platform } from '@/constants';
 
 import { generate, generateByDocument } from '../generate';
 import styles from './index.scss';
@@ -13,7 +13,7 @@ import IndexVM from './index.vm';
 
 interface BaseProps {
     tipsHeight: number;
-    language: string;
+    language: Language;
 }
 
 export interface ReadOnlyCodeProps extends BaseProps {
@@ -65,9 +65,9 @@ function HighlighterCode(props: HighlighterCodeProps) {
             </div>
             <SyntaxHighlighter
                 showLineNumbers={true}
-                language={language}
+                language={language.toLowerCase()}
                 style={vs2015}
-                customStyle={{ height: windowHeight - tipsHeight - 48 }}
+                customStyle={{ height: windowHeight - tipsHeight - 74 }}
             >
                 {rawCode}
             </SyntaxHighlighter>
@@ -76,13 +76,19 @@ function HighlighterCode(props: HighlighterCodeProps) {
 }
 
 export function ReadOnlyCode(props: ReadOnlyCodeProps) {
+    const { platform, response, language, ...extra } = props;
+
     const vm = React.useMemo(() => new IndexVM(), []);
-    const { platform, response, ...extra } = props;
+
     return (
         <Observer>
             {() =>
                 vm.initialized && !!vm.config ? (
-                    <HighlighterCode {...extra} codes={generate(platform, response, vm.config)} />
+                    <HighlighterCode
+                        {...extra}
+                        language={language}
+                        codes={generate(platform, language, response, vm.config)}
+                    />
                 ) : (
                     <Spin />
                 )
@@ -93,12 +99,16 @@ export function ReadOnlyCode(props: ReadOnlyCodeProps) {
 
 export function DocumentCode(props: DocumentCodeProps) {
     const vm = React.useMemo(() => new IndexVM(), []);
-    const { platform, ...extra } = props;
+    const { platform, language, ...extra } = props;
     return (
         <Observer>
             {() =>
                 vm.initialized && !!vm.config ? (
-                    <HighlighterCode {...extra} codes={generateByDocument(platform, vm.config)} />
+                    <HighlighterCode
+                        {...extra}
+                        language={language}
+                        codes={generateByDocument(platform, language, vm.config)}
+                    />
                 ) : (
                     <Spin />
                 )

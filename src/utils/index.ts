@@ -1,2 +1,2 @@
-export { defaultExtensionConfig, Extension, VERSION } from './extension';
+export * from './extension';
 export * from './message';

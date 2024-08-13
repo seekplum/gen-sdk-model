@@ -1,9 +1,9 @@
 import { LeftCircleTwoTone, RightCircleTwoTone } from '@ant-design/icons';
-import { Flex, Spin, Typography } from 'antd';
+import { Flex, Radio, Spin, Typography } from 'antd';
 import { Observer } from 'mobx-react-lite';
 import * as React from 'react';
 
-import { Platform } from '@/constants';
+import { Language, Platform } from '@/constants';
 
 import styles from './App.scss';
 import AppVM from './App.vm';
@@ -11,6 +11,9 @@ import { DocumentCode, ReadOnlyCode } from './code';
 
 const App: React.FC = () => {
     const [tipsHeight, setTipsHeight] = React.useState(105);
+
+    const [language, setLanguage] = React.useState<Language | null>(null);
+
     const vm = React.useMemo(() => new AppVM(), []);
     const elemRef = React.useRef<HTMLDivElement>(null);
 
@@ -67,26 +70,48 @@ const App: React.FC = () => {
                                         </Typography.Text>
                                     </Flex>
                                 </div>
-                                {vm.platformResponse ? (
-                                    <ReadOnlyCode
-                                        tipsHeight={tipsHeight}
-                                        language={vm.config.language}
-                                        platform={vm.platformResponse.platform}
-                                        response={vm.platformResponse.response}
-                                    />
-                                ) : vm.platform === Platform.WEIXIN ? (
-                                    <DocumentCode
-                                        tipsHeight={tipsHeight}
-                                        language={vm.config.language}
-                                        platform={vm.platform}
-                                    />
-                                ) : vm.initialized ? (
-                                    <Typography.Text strong type="danger">
-                                        获取请求数据失败，请尝试刷新页面，或者切换其它接口后再返回
-                                    </Typography.Text>
-                                ) : (
-                                    <Spin />
-                                )}
+                                <Flex vertical gap={4}>
+                                    {vm.platformResponse || vm.platform === Platform.WEIXIN ? (
+                                        <>
+                                            <Flex gap={12}>
+                                                <Typography.Text>选择语言:</Typography.Text>
+                                                <Radio.Group
+                                                    value={language || vm.config.language}
+                                                    onChange={(e) =>
+                                                        setLanguage(e.target.value as Language)
+                                                    }
+                                                >
+                                                    <Radio value={Language.PYTHON}>
+                                                        {Language.PYTHON}
+                                                    </Radio>
+                                                    <Radio value={Language.TYPESCRIPT}>
+                                                        {Language.TYPESCRIPT}
+                                                    </Radio>
+                                                </Radio.Group>
+                                            </Flex>
+                                            {vm.platformResponse ? (
+                                                <ReadOnlyCode
+                                                    tipsHeight={tipsHeight}
+                                                    language={language || vm.config.language}
+                                                    platform={vm.platformResponse.platform}
+                                                    response={vm.platformResponse.response}
+                                                />
+                                            ) : (
+                                                <DocumentCode
+                                                    tipsHeight={tipsHeight}
+                                                    language={language || vm.config.language}
+                                                    platform={Platform.WEIXIN}
+                                                />
+                                            )}
+                                        </>
+                                    ) : vm.initialized ? (
+                                        <Typography.Text strong type="danger">
+                                            获取请求数据失败，请尝试刷新页面，或者切换其它接口后再返回
+                                        </Typography.Text>
+                                    ) : (
+                                        <Spin />
+                                    )}
+                                </Flex>
                             </Flex>
                         )
                     ) : (

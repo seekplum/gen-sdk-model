@@ -1,7 +1,7 @@
 import { ModelTypes, VariableTypes } from '@/constants';
 import type { IParam, RequestParam, RequestResponse } from '@/typings/doudian';
 import type * as RequestTypes from '@/typings/request';
-import { snake2pascal } from '@/utils/utils';
+import { removeSpecialCharacters, snake2pascal } from '@/utils/utils';
 
 const TYPE_MAP = {
     0: VariableTypes.INT,
@@ -11,6 +11,7 @@ const TYPE_MAP = {
     4: VariableTypes.BOOL,
     5: VariableTypes.OBJECT,
     7: VariableTypes.INT,
+    8: VariableTypes.OBJECT,
     9: VariableTypes.FLOAT,
     99: VariableTypes.INT,
 } as Record<number, string>;
@@ -42,9 +43,16 @@ function parseName(param: IParam): string {
     return param.requestName || param.responseName || 'unknown';
 }
 
-function parseType(param: IParam): string {
-    const typeName = isModel(param) ? snake2pascal(parseName(param)) : TYPE_MAP[param.type];
-    return isRequired(param) ? typeName : `Optional[${typeName}]`;
+function parseType(param: IParam): [string, string | null] {
+    const originType = TYPE_MAP[param.type];
+    let typeName = isModel(param) ? snake2pascal(parseName(param)) : originType;
+    let childType = null;
+    if (originType === VariableTypes.LIST) {
+        const originChildType = param.subType ? TYPE_MAP[param.subType] : null;
+        childType = originChildType === VariableTypes.OBJECT ? typeName : originChildType;
+        typeName = originType;
+    }
+    return [isRequired(param) ? typeName : `Optional[${typeName}]`, childType];
 }
 
 function buildParams(
@@ -80,11 +88,13 @@ function convertModel(models: [string, ModelTypes, IParam[]][]): RequestTypes.Re
         const [className, parentModelType, params] = values;
         const childParams: RequestTypes.IParam[] = [];
         for (const param of params) {
+            const [typeName, childType] = parseType(param);
             childParams.push({
                 name: parseName(param),
-                type: parseType(param),
-                description: param.description,
-                example: param.example,
+                type: typeName,
+                childType,
+                description: removeSpecialCharacters(param.description),
+                example: removeSpecialCharacters(param.example),
                 required: isRequired(param),
                 deprecated: isDeprecated(param),
                 removed: isRemoved(param),

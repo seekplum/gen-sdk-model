@@ -5,6 +5,7 @@ import {
   Input,
   message,
   Radio,
+  Select,
   Spin,
   Switch,
   Typography,
@@ -163,10 +164,25 @@ const App: React.FC = () => {
                         >
                             <Switch />
                         </Form.Item>
-                        <Form.Item label="语言" name="language" initialValue={vm.config.language}>
-                            <Radio.Group value={vm.config.language}>
-                                <Radio value={Language.PYTHON}>{Language.PYTHON}</Radio>
-                            </Radio.Group>
+                        <Form.Item
+                            label="首选语言"
+                            name="language"
+                            initialValue={vm.config.language}
+                        >
+                            <Select
+                                value={vm.config.language}
+                                style={{ width: 120 }}
+                                options={[
+                                    {
+                                        value: Language.PYTHON,
+                                        label: Language.PYTHON,
+                                    },
+                                    {
+                                        value: Language.TYPESCRIPT,
+                                        label: Language.TYPESCRIPT,
+                                    },
+                                ]}
+                            />
                         </Form.Item>
                         <Form.Item label="开放平台">
                             <Radio.Group onChange={handleChangePlatform} value={vm.platform}>

@@ -1,5 +1,6 @@
 export interface IParam {
     type: number;
+    subType?: number;
     example: string;
     description: string;
 

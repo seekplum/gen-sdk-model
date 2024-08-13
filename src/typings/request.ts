@@ -1,6 +1,7 @@
 export interface IParam {
     name: string;
     type: string;
+    childType?: string;
     description: string;
     example: string;
 
