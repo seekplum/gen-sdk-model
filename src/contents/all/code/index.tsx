@@ -100,6 +100,14 @@ export function ReadOnlyCode(props: ReadOnlyCodeProps) {
 export function DocumentCode(props: DocumentCodeProps) {
     const vm = React.useMemo(() => new IndexVM(), []);
     const { platform, language, ...extra } = props;
+
+    const observer = new MutationObserver((_) => {
+        vm.toggleInitialized(false);
+        vm.toggleInitialized(true);
+    });
+
+    observer.observe(document, { attributes: true, childList: true, subtree: true });
+
     return (
         <Observer>
             {() =>

@@ -21,6 +21,11 @@ class IndexVM {
     config: IExtensionConfig | null = null;
 
     @action
+    toggleInitialized = (value: boolean) => {
+        this.initialized = value;
+    };
+
+    @action
     fetchConfig = async (): Promise<void> => {
         const config = await Extension.getConfig();
         runInAction(() => {

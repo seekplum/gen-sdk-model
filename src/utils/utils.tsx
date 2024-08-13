@@ -19,3 +19,7 @@ export function parsePlatform(host: string): Platform | null {
 export function removeSpecialCharacters(value: string): string {
     return value.replaceAll('\n', '').replaceAll('\\"', '').replaceAll('"', '');
 }
+
+export async function sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
