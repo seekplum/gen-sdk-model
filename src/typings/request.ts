@@ -3,7 +3,7 @@ export interface IParam {
     type: string;
     childType?: string;
     description: string;
-    example: string;
+    example?: string;
 
     required?: boolean;
     deprecated?: boolean;

@@ -5,6 +5,7 @@ import type * as RequestTypes from '@/typings/request';
 import { generate as generateDoudian } from './doudian';
 import { generate as generateByPython } from './python';
 import { generate as generateByTypescript } from './typescript';
+import { generate as generateWeixin } from './weixin';
 
 function generateCodes(
     platform: Platform,
@@ -42,13 +43,12 @@ export function generateByDocument(
     language: Language,
     config: IExtensionConfig,
 ): string[] {
-    const requestConfig = config.modelConfig[platform];
-    return [
-        `platform: ${platform}`,
-        `language: ${language}`,
-        `child_base_type: ${requestConfig.childBaseType}`,
-        `param_base_type: ${requestConfig.paramBaseType}`,
-        `response_base_type: ${requestConfig.responseBaseType}`,
-        `request_base_type: ${requestConfig.requestBaseType}`,
-    ];
+    let requestData: RequestTypes.RequestData | null = null;
+    if (platform === Platform.WEIXIN) {
+        requestData = generateWeixin();
+    }
+    if (!requestData) {
+        throw new Error(`Unsupported platform: ${platform}`);
+    }
+    return generateCodes(platform, language, requestData, config);
 }

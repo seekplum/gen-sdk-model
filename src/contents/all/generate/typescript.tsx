@@ -34,7 +34,7 @@ function generateByTypescript(
         if (config.needDescription) {
             args.push(`description: ${childParam.description}`);
         }
-        if (config.needExample) {
+        if (config.needExample && childParam.example !== undefined) {
             args.push(`example: ${childParam.example}`);
         }
         const defaultVal = childParam.required ? '' : '?';

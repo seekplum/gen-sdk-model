@@ -25,7 +25,7 @@ function generateByPython(
         if (config.needDescription) {
             args.push(`description="${childParam.description}"`);
         }
-        if (config.needExample) {
+        if (config.needExample && childParam.example !== undefined) {
             args.push(`json_schema_extra={"example": "${childParam.example}"}`);
         }
         const defaultVal = childParam.required ? '...' : 'default=None';

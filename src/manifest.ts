@@ -27,6 +27,8 @@ const manifest: Manifest.WebExtensionManifest = {
             matches: [
                 'https://op.jinritemai.com/docs/api-docs/*/*',
                 'https://developers.weixin.qq.com/doc/channels/API/*',
+                'https://developers.weixin.qq.com/doc/ministore/*',
+                'https://developers.weixin.qq.com/miniprogram/dev/*',
             ],
             css: ['css/all.css'],
             run_at: 'document_start',
