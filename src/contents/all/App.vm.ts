@@ -3,6 +3,7 @@ import { action, makeObservable, observable, runInAction } from 'mobx';
 import {
   CRX_NAME,
   EventNames,
+  type Language,
   MessageModules,
   type Platform,
 } from '@/constants';
@@ -62,6 +63,18 @@ class AppVM {
         this.config.isExpanded = !this.config.isExpanded;
         await Extension.setConfig({
             isExpanded: this.config.isExpanded,
+        });
+    };
+
+    @action
+    toggleLanguage = async (language: Language) => {
+        if (!this.config) {
+            return;
+        }
+
+        this.config.language = language;
+        await Extension.setConfig({
+            language: this.config.language,
         });
     };
 

@@ -77,9 +77,12 @@ const App: React.FC = () => {
                                                 <Typography.Text>选择语言:</Typography.Text>
                                                 <Radio.Group
                                                     value={language || vm.config.language}
-                                                    onChange={(e) =>
-                                                        setLanguage(e.target.value as Language)
-                                                    }
+                                                    onChange={(e) => {
+                                                        setLanguage(e.target.value as Language);
+                                                        vm.toggleLanguage(
+                                                            e.target.value as Language,
+                                                        );
+                                                    }}
                                                 >
                                                     <Radio value={Language.PYTHON}>
                                                         {Language.PYTHON}
