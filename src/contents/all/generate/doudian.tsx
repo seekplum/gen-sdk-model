@@ -1,7 +1,32 @@
 import { ModelTypes, VariableTypes } from '@/constants';
-import type { IParam, RequestParam, RequestResponse } from '@/typings/doudian';
 import type * as RequestTypes from '@/typings/request';
 import { removeSpecialCharacters, snake2pascal } from '@/utils/utils';
+
+interface IParam {
+    type: number;
+    subType?: number;
+    example: string;
+    description: string;
+
+    requestName?: string;
+    responseName?: string;
+    mustNeed?: boolean;
+    children?: IParam[];
+}
+
+interface RequestParam extends IParam {
+    requestName: string;
+    mustNeed: boolean;
+    deprecated?: boolean;
+    removed?: boolean;
+    children?: RequestParam[];
+}
+
+interface RequestResponse extends IParam {
+    responseName: string;
+    tagId?: number;
+    children?: RequestResponse[];
+}
 
 const TYPE_MAP = {
     0: VariableTypes.INT,
@@ -110,6 +135,7 @@ function convertModel(models: [string, ModelTypes, IParam[]][]): RequestTypes.Re
     return requestModels;
 }
 function genModels(
+    comments: string[],
     methodName: string,
     requestParams: RequestParam[],
     responseData: RequestResponse[],
@@ -120,6 +146,7 @@ function genModels(
         methodName,
         params: convertModel(paramModels),
         responses: convertModel(responseModels),
+        comments,
     } as RequestTypes.RequestData;
 }
 
@@ -128,6 +155,7 @@ export function generate(response: string): RequestTypes.RequestData {
     const methodName = snake2pascal(responseJson.data.article.info.title);
     const content = JSON.parse(responseJson.data.article.content);
     return genModels(
+        [location.href],
         methodName,
         content.request.requestParam || [],
         content.response.responseData || [],

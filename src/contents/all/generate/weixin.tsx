@@ -20,6 +20,10 @@ interface IRequestId {
     response: string;
 }
 
+interface IParam extends RequestTypes.IParam {
+    children: IParam[];
+}
+
 enum Product {
     CHANNELS = 'channels',
     MINI_STORE = 'mini_store',
@@ -73,18 +77,220 @@ function parseMethodName(product: Product): string | null {
     return snake2pascal(new URL(url).pathname);
 }
 
-function parseType(type: string): string {
-    if (type.includes('array')) {
-        return VariableTypes.LIST;
-    }
-
-    if (type.toLowerCase().includes('object') || type.toLowerCase().includes('objct')) {
-        return VariableTypes.OBJECT;
-    }
-    return TYPE_MAP[type] || type;
+function parseArrayChildType(type: string): string {
+    const tmpType = type
+        .trim()
+        .toLowerCase()
+        .replace(/array|[()<>[\]]/g, '')
+        .trim();
+    return TYPE_MAP[tmpType] || tmpType;
 }
 
-function parseParams(elementID: string, isResponse = false): RequestTypes.IParam[] | null {
+function parseName(name: string): string {
+    return name.replace('[]', '');
+}
+
+function parseNameByOject(name: string): string {
+    return name.toLowerCase().replace(/object|objct|[()]/g, '');
+}
+
+function isObject(lowerType: string): boolean {
+    return lowerType.includes('object') || lowerType.includes('objct');
+}
+
+function parseTypeByType(type: string): [string, string] {
+    const lowerType = type.toLowerCase();
+    if (lowerType.includes('array')) {
+        return [VariableTypes.LIST, parseArrayChildType(lowerType)];
+    }
+    if (lowerType.includes('[]')) {
+        return [VariableTypes.LIST, snake2pascal(lowerType.replace('[]', ''))];
+    }
+
+    if (isObject(lowerType)) {
+        return [snake2pascal(parseNameByOject(lowerType)), ''];
+    }
+    return [TYPE_MAP[type] || type, ''];
+}
+
+function parseTypeByName(name: string): [string, string] {
+    if (name.includes('[]')) {
+        return [VariableTypes.LIST, snake2pascal(parseName(name))];
+    }
+    return [snake2pascal(name), ''];
+}
+
+function removeChildren(children: IParam[]) {
+    const res = [...children];
+    while (res.length > 0) {
+        const child = res.pop();
+        if (!child) {
+            continue;
+        }
+        // res.push(...child.children);
+        child.children = [];
+    }
+    return children;
+}
+
+function buildParams(
+    className: string,
+    parentModelType: ModelTypes,
+    childParams: IParam[],
+): RequestTypes.RequestModel[] {
+    const models: RequestTypes.RequestModel[] = [];
+    const childrenArrays: IParam[] = [];
+    const childParamsArrays: IParam[] = [...childParams];
+    while (childParamsArrays.length > 0) {
+        const childParam = childParamsArrays.pop();
+        if (!childParam) {
+            continue;
+        }
+        if (childParam.children.length > 0) {
+            childrenArrays.push(
+                ...childParam.children.filter((child) => child.children.length > 0),
+                childParam,
+            );
+            childParamsArrays.push(...childParam.children);
+        }
+    }
+    const exitsNames = new Set();
+    for (let i = childrenArrays.length - 1; i >= 0; i--) {
+        const child = childrenArrays[i];
+        const childClassName = snake2pascal(child.name);
+        if (exitsNames.has(childClassName)) {
+            continue;
+        }
+        const childrenParams = removeChildren(child.children);
+        exitsNames.add(childClassName);
+        models.push({
+            className: childClassName,
+            parentModelType: ModelTypes.CHILD,
+            childParams: childrenParams,
+        } as RequestTypes.RequestModel);
+    }
+    models.push({
+        className,
+        parentModelType,
+        childParams: removeChildren(childParams),
+    } as RequestTypes.RequestModel);
+    return models;
+}
+
+function convertModels(
+    params: RequestTypes.IParam[],
+    className: string,
+    parentModelType: ModelTypes,
+): RequestTypes.RequestModel[] {
+    const childParams: IParam[] = [];
+    for (const param of params) {
+        // 复杂类型
+        if (param.name.includes('.')) {
+            const names = param.name.split('.');
+            const baseName = parseName(names[0]);
+            let rootChild = childParams.find((item) => item.name === baseName);
+            if (!rootChild) {
+                // 说明文档中没有该类型
+                const [rootType, rootChildType] = parseTypeByName(names[0]);
+                rootChild = {
+                    name: baseName,
+                    type: rootType,
+                    childType: rootChildType,
+                    required: false,
+                    description: '缺少类型描述，请自行补充',
+                    children: [],
+                } as IParam;
+                childParams.push(rootChild);
+            }
+
+            let rootChildren = rootChild.children;
+            for (let j = 1; j < names.length; j++) {
+                const tmpName = names[j];
+
+                let tmpType2 = param.type;
+                let tmpChildType2 = '';
+                const isNoLast = j !== names.length - 1;
+                if (isNoLast) {
+                    if (tmpName.includes('[]')) {
+                        [tmpType2, tmpChildType2] = parseTypeByName(tmpName);
+                    } else {
+                        tmpType2 = snake2pascal(parseName(tmpName));
+                        tmpChildType2 = '';
+                    }
+                } else {
+                    [tmpType2, tmpChildType2] = parseTypeByType(param.type);
+                    if (tmpType2 === VariableTypes.LIST && !tmpChildType2) {
+                        tmpChildType2 = snake2pascal(parseName(tmpName));
+                    }
+                }
+                const tmpName2 = parseName(tmpName);
+
+                const tmpChild = {
+                    name: tmpName2,
+                    type: tmpType2,
+                    childType: tmpChildType2,
+                    required: param.required,
+                    description: param.description,
+                    children: [],
+                } as IParam;
+                const tmpChildren = rootChildren.find((item) => item.name === tmpName2);
+                if (tmpChildren) {
+                    rootChildren = tmpChildren.children;
+                } else {
+                    rootChildren.push(tmpChild);
+                    rootChildren = tmpChild.children;
+                }
+            }
+        } else {
+            let tmpType1 = param.type;
+            let tmpChildType1 = '';
+            if (param.name.includes('[]')) {
+                [tmpType1, tmpChildType1] = parseTypeByName(param.name);
+            } else {
+                [tmpType1, tmpChildType1] = parseTypeByType(param.type);
+            }
+            childParams.push({
+                name: parseName(param.name),
+                type: tmpType1,
+                childType: tmpChildType1,
+                required: param.required,
+                description: param.description,
+                children: [],
+            } as IParam);
+        }
+    }
+
+    return buildParams(className, parentModelType, childParams);
+}
+
+function getModels(
+    rows: string[][],
+    className: string,
+    parentModelType: ModelTypes,
+): RequestTypes.RequestModel[] {
+    const params: RequestTypes.IParam[] = [];
+    for (const cells of rows) {
+        if (cells.length === 0) {
+            continue;
+        }
+        const name = cells[0];
+        const type = cells[1];
+        const required = cells.length === 3 ? true : cells[2] === '是';
+        const description = cells.length === 3 ? cells[2] : cells[3];
+        params.push({
+            name,
+            type,
+            required,
+            description: removeSpecialCharacters(description),
+        } as RequestTypes.IParam);
+    }
+    return convertModels(params, className, parentModelType);
+}
+
+function getElement(elementID: string): Element | null {
+    if (!elementID) {
+        return null;
+    }
     let element = document.querySelector(`#${elementID}`);
     while (element && element.tagName !== 'TABLE') {
         element = element.nextElementSibling;
@@ -93,80 +299,101 @@ function parseParams(elementID: string, isResponse = false): RequestTypes.IParam
         if (element?.firstChild?.tagName === 'TABLE') {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-expect-error
-            element = element.firstChild;
+            return element.firstChild;
+        }
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        if (element?.lastChild?.tagName === 'TABLE') {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-expect-error
-        } else if (element?.lastChild?.tagName === 'TABLE') {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-expect-error
-            element = element.lastChild;
+            return element.lastChild;
+        }
+        if (element?.nextElementSibling?.tagName === 'TABLE') {
+            return element.nextElementSibling;
         }
     }
+    return element;
+}
+
+function getDataByDocument(elementID: string): string[][] {
+    const element = getElement(elementID);
     if (!element) {
-        return null;
+        return [];
     }
     const rows = [...element.querySelectorAll('tr')];
-    const childParams: RequestTypes.IParam[] = [];
+    const data = [];
+    const exitsNames = new Set();
     for (const row of rows) {
-        const cells = [...row.querySelectorAll('td')];
+        const cells = [...row.querySelectorAll('td')].map((cell) => cell.textContent || '');
         if (cells.length === 0) {
             continue;
         }
-        const name = removeSpecialCharacters(cells[0].textContent || '');
-        const type = parseType(cells[1].textContent || '');
-        const required = isResponse ? false : cells[2].textContent === '是';
-        const description = isResponse ? cells[2].textContent || '' : cells[3].textContent || '';
-        childParams.push({
-            name,
-            type,
-            required,
-            description,
-            example: '',
-        } as RequestTypes.IParam);
+        data.push(cells);
+        const dataType = cells[1].toLowerCase();
+        if (cells.length === 3 && isObject(dataType)) {
+            const nameId = parseNameByOject(dataType);
+            if (exitsNames.has(nameId)) {
+                continue;
+            }
+            const dataElem = getElement(nameId);
+            if (dataElem) {
+                exitsNames.add(nameId);
+                const dataRows = [...dataElem.querySelectorAll('tr')];
+                for (const dataRow of dataRows) {
+                    const dataCells = [...dataRow.querySelectorAll('td')].map(
+                        (cell) => cell.textContent || '',
+                    );
+                    if (dataCells.length === 0) {
+                        continue;
+                    }
+                    const [name, ...extra] = dataCells;
+                    data.push([`${nameId}.${name}`, ...extra]);
+                }
+            } else {
+                throw new Error(`未找到 ${elementID} 中的 ${nameId} 数据`);
+            }
+        }
     }
-    return childParams;
+    return data;
 }
-
 function buildModels(
     className: string,
     parentModelType: ModelTypes,
     elementID: string,
-    isResponse = false,
 ): RequestTypes.RequestModel[] {
-    const childParams = parseParams(elementID, isResponse) || [];
-    return [
-        {
-            className,
-            parentModelType,
-            childParams,
-        } as RequestTypes.RequestModel,
-    ];
+    const data = getDataByDocument(elementID);
+    return getModels(data, className, parentModelType);
 }
 
-function genModels(methodName: string, product: Product): RequestTypes.RequestData {
+function genModels(
+    comments: string[],
+    methodName: string,
+    product: Product,
+): RequestTypes.RequestData {
     const requestId = PRODUCT_REQUEST_ID_MAP[product];
     const params = buildModels(`${methodName}Param`, ModelTypes.PARAM, requestId.param);
-    const responses = buildModels(
-        `${methodName}Response`,
-        ModelTypes.RESPONSE,
-        requestId.response,
-        true,
-    );
+    const responses = buildModels(`${methodName}Response`, ModelTypes.RESPONSE, requestId.response);
     return {
         methodName,
         params,
         responses,
+        comments,
     } as RequestTypes.RequestData;
 }
 
 export function generate(): RequestTypes.RequestData {
     const product = parseProduct();
     if (!product) {
-        throw new Error('未找到产品类型');
+        return {
+            comments: ['未找到产品类型'],
+        } as RequestTypes.RequestData;
     }
     const methodName = parseMethodName(product);
     if (!methodName) {
-        throw new Error('未找到接口名称');
+        return {
+            comments: ['未找到接口名称'],
+        } as RequestTypes.RequestData;
     }
-    return genModels(methodName, product);
+
+    return genModels([location.href], methodName, product);
 }

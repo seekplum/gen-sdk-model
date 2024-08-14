@@ -1,6 +1,7 @@
 import { type Platform, VariableTypes } from '@/constants';
 import type { IExtensionConfig } from '@/typings';
 import type * as RequestTypes from '@/typings/request';
+import { pascal2pathname } from '@/utils/utils';
 
 import { getParentModelName } from './utils';
 
@@ -58,19 +59,26 @@ export function generate(
     config: IExtensionConfig,
 ): string[] {
     const rawCodes: string[] = [];
-    for (const param of requestData.params) {
+    if (requestData.comments) {
+        rawCodes.push(...requestData.comments.map((comment) => `/** ${comment} */`));
+    }
+    const params = requestData.params || [];
+    const responses = requestData.responses || [];
+    for (const param of params) {
         rawCodes.push(...generateByTypescript(platform, param, config));
     }
-    for (const param of requestData.responses) {
+    for (const param of responses) {
         rawCodes.push(...generateByTypescript(platform, param, config));
     }
 
-    rawCodes.push(
-        `type ${requestData.methodName}Request = ${config.modelConfig[platform].requestBaseType} & {`,
-        `    method: "${requestData.methodName}",`,
-        `    param: ${requestData.params[requestData.params.length - 1].className},`,
-        '}',
-        '    ',
-    );
+    if (requestData.methodName && params.length > 0) {
+        rawCodes.push(
+            `type ${requestData.methodName}Request = ${config.modelConfig[platform].requestBaseType} & {`,
+            `    method: "${pascal2pathname(requestData.methodName)}",`,
+            `    param: ${params[params.length - 1].className},`,
+            '}',
+            '    ',
+        );
+    }
     return rawCodes;
 }

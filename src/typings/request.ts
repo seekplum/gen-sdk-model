@@ -25,7 +25,8 @@ export interface RequestModel {
 }
 
 export interface RequestData {
-    methodName: string;
-    params: RequestModel[];
-    responses: RequestModel[];
+    methodName?: string;
+    params?: RequestModel[];
+    responses?: RequestModel[];
+    comments?: string[];
 }

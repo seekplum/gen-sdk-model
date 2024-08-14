@@ -5,6 +5,18 @@ export function snake2pascal(name: string): string {
     return camelCase.charAt(0).toUpperCase() + camelCase.slice(1);
 }
 
+export function pascal2pathname(name: string): string {
+    const pathname = name.replace(/(\/[A-Za-z]|[a-z][A-Z])/g, (_, char) => {
+        const first = char.charAt(0);
+        const second = char.charAt(1).toLowerCase();
+        if (first === '/') {
+            return `.${second}`;
+        }
+        return `${first}.${second}`;
+    });
+    return pathname.charAt(0).toLowerCase() + pathname.slice(1);
+}
+
 export function parsePlatform(host: string): Platform | null {
     switch (host) {
         case 'op.jinritemai.com':
@@ -17,7 +29,7 @@ export function parsePlatform(host: string): Platform | null {
 }
 
 export function removeSpecialCharacters(value: string): string {
-    return value.replaceAll('\n', '').replaceAll('\\"', '').replaceAll('"', '');
+    return value.replace(/[\n"\\]/g, '');
 }
 
 export async function sleep(ms: number): Promise<void> {
