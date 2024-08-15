@@ -1,6 +1,6 @@
 import { ModelTypes, VariableTypes } from '@/constants';
 import type * as RequestTypes from '@/typings/request';
-import { removeSpecialCharacters, snake2pascal } from '@/utils/utils';
+import * as utils from '@/utils/utils';
 
 const TYPE_MAP = {
     'number': VariableTypes.INT,
@@ -62,7 +62,7 @@ function parseProduct(): Product | null {
     return null;
 }
 
-function parseMethodName(product: Product): string | null {
+function parseUrl(product: Product): URL | null {
     const requestId = PRODUCT_REQUEST_ID_MAP[product];
     let element = document.querySelector(`#${requestId.url}`);
     while (element && element.tagName !== 'DIV') {
@@ -74,7 +74,7 @@ function parseMethodName(product: Product): string | null {
     if (!url) {
         return null;
     }
-    return snake2pascal(new URL(url).pathname);
+    return new URL(url);
 }
 
 function parseArrayChildType(type: string): string {
@@ -104,20 +104,20 @@ function parseTypeByType(type: string): [string, string] {
         return [VariableTypes.LIST, parseArrayChildType(lowerType)];
     }
     if (lowerType.includes('[]')) {
-        return [VariableTypes.LIST, snake2pascal(lowerType.replace('[]', ''))];
+        return [VariableTypes.LIST, utils.snake2pascal(lowerType.replace('[]', ''))];
     }
 
     if (isObject(lowerType)) {
-        return [snake2pascal(parseNameByOject(lowerType)), ''];
+        return [utils.snake2pascal(parseNameByOject(lowerType)), ''];
     }
     return [TYPE_MAP[type] || type, ''];
 }
 
 function parseTypeByName(name: string): [string, string] {
     if (name.includes('[]')) {
-        return [VariableTypes.LIST, snake2pascal(parseName(name))];
+        return [VariableTypes.LIST, utils.snake2pascal(parseName(name))];
     }
-    return [snake2pascal(name), ''];
+    return [utils.snake2pascal(name), ''];
 }
 
 function removeChildren(children: IParam[]) {
@@ -157,7 +157,7 @@ function buildParams(
     const exitsNames = new Set();
     for (let i = childrenArrays.length - 1; i >= 0; i--) {
         const child = childrenArrays[i];
-        const childClassName = snake2pascal(child.name);
+        const childClassName = utils.snake2pascal(child.name);
         if (exitsNames.has(childClassName)) {
             continue;
         }
@@ -214,13 +214,13 @@ function convertModels(
                     if (tmpName.includes('[]')) {
                         [tmpType2, tmpChildType2] = parseTypeByName(tmpName);
                     } else {
-                        tmpType2 = snake2pascal(parseName(tmpName));
+                        tmpType2 = utils.snake2pascal(parseName(tmpName));
                         tmpChildType2 = '';
                     }
                 } else {
                     [tmpType2, tmpChildType2] = parseTypeByType(param.type);
                     if (tmpType2 === VariableTypes.LIST && !tmpChildType2) {
-                        tmpChildType2 = snake2pascal(parseName(tmpName));
+                        tmpChildType2 = utils.snake2pascal(parseName(tmpName));
                     }
                 }
                 const tmpName2 = parseName(tmpName);
@@ -281,7 +281,7 @@ function getModels(
             name,
             type,
             required,
-            description: removeSpecialCharacters(description),
+            description: utils.removeSpecialCharacters(description),
         } as RequestTypes.IParam);
     }
     return convertModels(params, className, parentModelType);
@@ -367,6 +367,7 @@ function buildModels(
 
 function genModels(
     comments: string[],
+    requestName: string,
     methodName: string,
     product: Product,
 ): RequestTypes.RequestData {
@@ -378,6 +379,7 @@ function genModels(
         params,
         responses,
         comments,
+        requestName,
     } as RequestTypes.RequestData;
 }
 
@@ -388,12 +390,14 @@ export function generate(): RequestTypes.RequestData {
             comments: ['未找到产品类型'],
         } as RequestTypes.RequestData;
     }
-    const methodName = parseMethodName(product);
-    if (!methodName) {
+    const url = parseUrl(product);
+    if (!url) {
         return {
-            comments: ['未找到接口名称'],
+            comments: ['解析 URL 失败'],
         } as RequestTypes.RequestData;
     }
+    const methodName = utils.snake2pascal(url.pathname);
+    const requestName = utils.pathname2requestName(url.pathname);
 
-    return genModels([location.href], methodName, product);
+    return genModels([location.href], requestName, methodName, product);
 }

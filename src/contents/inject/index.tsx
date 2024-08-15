@@ -16,6 +16,10 @@ function sendMessageToContent(
     eventName: EventNames,
     data: ContentMessageData<PlatformResponseData>,
 ): void {
+    const targetOrigin = utils.getTargetOrigin(data.data.platform);
+    if (!targetOrigin) {
+        return;
+    }
     window.postMessage(
         {
             origin: CRX_NAME,
@@ -23,11 +27,16 @@ function sendMessageToContent(
             eventName,
             data,
         } as InjectionMessageData<ContentMessageData>,
-        'https://op.jinritemai.com/docs/api-docs/*/*',
+        targetOrigin,
     );
 }
 
-function sendResponseToContent(method: string, url: string, responseText: string): void {
+function sendResponseToContent(
+    source: string,
+    method: string,
+    url: string,
+    responseText: string,
+): void {
     const platform = utils.getRequestPlatform(window.location.host, method, url);
     if (!platform) {
         return;
@@ -36,7 +45,7 @@ function sendResponseToContent(method: string, url: string, responseText: string
         platform,
         response: responseText,
     } as PlatformResponseData;
-    printer.consoleLog('injected chrome extension data1:', data);
+    printer.consoleLog('injected chrome extension data1:', source, data);
     sendMessageToContent(EventNames.XHR_RESPONSE, {
         module: MessageModules.INJECT,
         data,
@@ -49,12 +58,17 @@ function sendResponseToContent(method: string, url: string, responseText: string
     const originalOpen = XHR.open;
     const originalSend = XHR.send;
 
-    XHR.open = function (method: string, url: string) {
+    XHR.open = function (
+        method: string,
+        url: string | URL,
+        async?: boolean,
+        user?: string,
+        password?: string,
+    ) {
         this._method = method;
-        this._url = url;
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        return originalOpen.apply(this, arguments); // eslint-disable-line unicorn/prefer-reflect-apply, prefer-rest-params
+        this._url = typeof url === 'string' ? url : url.href;
+        // eslint-disable-next-line unicorn/prefer-reflect-apply
+        return originalOpen.apply(this, [method, url, async || true, user, password]);
     };
 
     XHR.send = function (...sendArgs) {
@@ -79,27 +93,28 @@ function sendResponseToContent(method: string, url: string, responseText: string
         }
         const method = this._method;
 
-        sendResponseToContent(method, url, this.responseText);
+        sendResponseToContent('XHR', method, url, this.responseText);
     };
 })(XMLHttpRequest);
 
 const originalFetch = window.fetch;
 
-window.fetch = function (url, options) {
-    const fch = originalFetch(url, options);
+window.fetch = function (...args) {
+    const [url, options, ..._] = args;
+    const fch = originalFetch(...args);
 
-    fch.then((resp) => {
+    fch.then((resp: Response) => {
         if (resp && resp.ok && resp.status === 200) {
             return resp.text();
         }
         return null;
-    }).then((res) => {
+    }).then((res: string | null) => {
         if (!res) {
             return;
         }
-        sendResponseToContent(options?.method || 'GET', url.toString(), res);
+        sendResponseToContent('Fetch', options?.method || 'GET', url.toString(), res);
     });
-    return fch;
+    return originalFetch(...args);
 };
 
 export default undefined;

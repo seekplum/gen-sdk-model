@@ -80,24 +80,32 @@ const App: React.FC = () => {
     const vm = React.useMemo(() => new OptionsSettingsVM(), []);
     const [doudianForm] = Form.useForm();
     const [weixinForm] = Form.useForm();
+    const [aliapyForm] = Form.useForm();
 
     const [messageApi, contextHolder] = message.useMessage();
     const handleChangePlatform = React.useCallback(
         (e: RadioChangeEvent) => {
             const { value } = e.target;
+            // eslint-disable-next-line unicorn/prefer-switch
             if (value === Platform.DOUDIAN) {
                 weixinForm.submit();
-            } else {
+                aliapyForm.submit();
+            } else if (value === Platform.WEIXIN) {
                 doudianForm.submit();
+                aliapyForm.submit();
+            } else if (value === Platform.ALIPAY) {
+                doudianForm.submit();
+                weixinForm.submit();
             }
             vm.onChangePlatform(value);
         },
-        [vm, doudianForm, weixinForm],
+        [vm, doudianForm, weixinForm, aliapyForm],
     );
     const handleSubmit = React.useCallback(
         (values: Record<string, any>) => {
             doudianForm.submit();
             weixinForm.submit();
+            aliapyForm.submit();
 
             vm.handleSubmit(values);
             messageApi.open({
@@ -105,7 +113,7 @@ const App: React.FC = () => {
                 content: '保存成功',
             });
         },
-        [vm, doudianForm, weixinForm],
+        [vm, doudianForm, weixinForm, aliapyForm],
     );
 
     return (
@@ -121,7 +129,7 @@ const App: React.FC = () => {
                         onFinish={handleSubmit}
                         autoComplete="off"
                     >
-                        <Form.Item label="版本" valuePropName="checked">
+                        <Form.Item label="版本">
                             <Typography.Text>{VERSION}</Typography.Text>
                         </Form.Item>
                         <Form.Item
@@ -192,7 +200,19 @@ const App: React.FC = () => {
                                 <Radio value={Platform.WEIXIN}>
                                     {PlatformNames[Platform.WEIXIN]}
                                 </Radio>
+                                <Radio value={Platform.ALIPAY}>
+                                    {PlatformNames[Platform.ALIPAY]}
+                                </Radio>
                             </Radio.Group>
+                        </Form.Item>
+                        <Form.Item label="" wrapperCol={{ offset: 8 }}>
+                            <Typography.Text>
+                                以下配置仅针对
+                                <Typography.Text strong>
+                                    {PlatformNames[vm.platform]}
+                                </Typography.Text>
+                                平台生效，其它平台请切换后进行配置
+                            </Typography.Text>
                         </Form.Item>
 
                         {Platform.DOUDIAN === vm.platform && (
@@ -210,6 +230,15 @@ const App: React.FC = () => {
                                 requestConfig={vm.modelConfig[Platform.WEIXIN]}
                                 onFinish={(values: IRequestConfig) =>
                                     vm.handleModelConfig(Platform.WEIXIN, values)
+                                }
+                            />
+                        )}
+                        {Platform.ALIPAY === vm.platform && (
+                            <RequestConfig
+                                form={aliapyForm}
+                                requestConfig={vm.modelConfig[Platform.ALIPAY]}
+                                onFinish={(values: IRequestConfig) =>
+                                    vm.handleModelConfig(Platform.ALIPAY, values)
                                 }
                             />
                         )}

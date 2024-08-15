@@ -1,9 +1,62 @@
-import { type Platform } from '@/constants';
+import { type Platform, VariableTypes } from '@/constants';
 import type { IExtensionConfig } from '@/typings';
 import type * as RequestTypes from '@/typings/request';
-import { pascal2pathname } from '@/utils/utils';
 
 import { getParentModelName } from './utils';
+
+function buildFieldArgs(childParam: RequestTypes.IParam, config: IExtensionConfig): string {
+    const args = [];
+    if (config.needDescription) {
+        args.push(`description="${childParam.description}"`);
+    }
+    if (config.needExample && childParam.example !== undefined) {
+        args.push(`json_schema_extra={"example": "${childParam.example}"}`);
+    }
+    if (childParam.maxLength !== undefined) {
+        let maxLenVal = '';
+        switch (childParam.type) {
+            case VariableTypes.STRING:
+            case VariableTypes.LIST:
+                maxLenVal = `max_length=${childParam.maxLength}`;
+                break;
+            case VariableTypes.INT:
+            case VariableTypes.FLOAT:
+                maxLenVal = `le=${10 ** childParam.maxLength}`;
+                break;
+        }
+        if (maxLenVal) {
+            args.push(maxLenVal);
+        }
+    }
+    if (childParam.minLength !== undefined) {
+        let minLenVal = '';
+        switch (childParam.type) {
+            case VariableTypes.STRING:
+            case VariableTypes.LIST:
+                minLenVal = `min_length=${childParam.minLength}`;
+                break;
+            case VariableTypes.INT:
+            case VariableTypes.FLOAT:
+                minLenVal = `ge=${10 ** childParam.minLength}`;
+                break;
+        }
+        if (minLenVal) {
+            args.push(minLenVal);
+        }
+    }
+    const defaultVal = childParam.required ? '...' : 'default=None';
+    return args.length > 0 ? ` = Field(${defaultVal}, ${args.join(', ')})` : '';
+}
+
+function buildTypeArgs(childParam: RequestTypes.IParam): string {
+    let typeName = childParam.childType
+        ? `${childParam.type}[${childParam.childType}]`
+        : childParam.type;
+    if (!childParam.required) {
+        typeName = `Optional[${typeName}]`;
+    }
+    return typeName;
+}
 
 function generateByPython(
     platform: Platform,
@@ -22,21 +75,8 @@ function generateByPython(
         if (childParam.deprecated && !config.needDeprecated) {
             continue;
         }
-        const args = [];
-        if (config.needDescription) {
-            args.push(`description="${childParam.description}"`);
-        }
-        if (config.needExample && childParam.example !== undefined) {
-            args.push(`json_schema_extra={"example": "${childParam.example}"}`);
-        }
-        const defaultVal = childParam.required ? '...' : 'default=None';
-        const fieldArgs = args.length > 0 ? ` = Field(${defaultVal}, ${args.join(', ')})` : '';
-        let typeName = childParam.childType
-            ? `${childParam.type}[${childParam.childType}]`
-            : childParam.type;
-        if (!childParam.required) {
-            typeName = `Optional[${typeName}]`;
-        }
+        const typeName = buildTypeArgs(childParam);
+        const fieldArgs = buildFieldArgs(childParam, config);
         rawCodes.push(`    ${childParam.name}: ${typeName}${fieldArgs}`);
     }
     if (param.childParams.length === 0) {
@@ -64,10 +104,10 @@ export function generate(
         rawCodes.push(...generateByPython(platform, param, config));
     }
 
-    if (requestData.methodName && params.length > 0) {
+    if (requestData.methodName && requestData.requestName && params.length > 0) {
         rawCodes.push(
             `class ${requestData.methodName}Request(${config.modelConfig[platform].requestBaseType}):`,
-            `    method: str = "${pascal2pathname(requestData.methodName)}"`,
+            `    method: str = "${requestData.requestName}"`,
             `    param: ${params[params.length - 1].className}`,
             '    ',
         );

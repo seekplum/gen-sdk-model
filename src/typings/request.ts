@@ -4,7 +4,8 @@ export interface IParam {
     childType?: string;
     description: string;
     example?: string;
-
+    minLength?: number;
+    maxLength?: number;
     required?: boolean;
     deprecated?: boolean;
     removed?: boolean;
@@ -29,4 +30,5 @@ export interface RequestData {
     params?: RequestModel[];
     responses?: RequestModel[];
     comments?: string[];
+    requestName?: string;
 }

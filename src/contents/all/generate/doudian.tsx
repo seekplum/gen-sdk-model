@@ -1,6 +1,6 @@
 import { ModelTypes, VariableTypes } from '@/constants';
 import type * as RequestTypes from '@/typings/request';
-import { removeSpecialCharacters, snake2pascal } from '@/utils/utils';
+import * as utils from '@/utils/utils';
 
 interface IParam {
     type: number;
@@ -50,7 +50,10 @@ function isModel(param: IParam): boolean {
 }
 
 function isRequired(param: IParam) {
-    return param.mustNeed || !param.description.includes('【可选】');
+    if (param.mustNeed !== undefined) {
+        return param.mustNeed;
+    }
+    return !param.description.includes('【可选】');
 }
 
 function isDeprecated(param: IParam): boolean {
@@ -70,14 +73,14 @@ function parseName(param: IParam): string {
 
 function parseType(param: IParam): [string, string | null] {
     const originType = TYPE_MAP[param.type];
-    let typeName = isModel(param) ? snake2pascal(parseName(param)) : originType;
+    let typeName = isModel(param) ? utils.snake2pascal(parseName(param)) : originType;
     let childType = null;
     if (originType === VariableTypes.LIST) {
         const originChildType = param.subType ? TYPE_MAP[param.subType] : null;
         childType = originChildType === VariableTypes.OBJECT ? typeName : originChildType;
         typeName = originType;
     }
-    return [isRequired(param) ? typeName : `Optional[${typeName}]`, childType];
+    return [typeName, childType];
 }
 
 function buildParams(
@@ -90,7 +93,7 @@ function buildParams(
             buildParams(modelType, c, models);
         }
         const childParams = param.children || [];
-        models.push([snake2pascal(parseName(param)), modelType, childParams]);
+        models.push([utils.snake2pascal(parseName(param)), modelType, childParams]);
     }
 }
 
@@ -118,8 +121,8 @@ function convertModel(models: [string, ModelTypes, IParam[]][]): RequestTypes.Re
                 name: parseName(param),
                 type: typeName,
                 childType,
-                description: removeSpecialCharacters(param.description),
-                example: removeSpecialCharacters(param.example),
+                description: utils.removeSpecialCharacters(param.description),
+                example: utils.removeSpecialCharacters(param.example),
                 required: isRequired(param),
                 deprecated: isDeprecated(param),
                 removed: isRemoved(param),
@@ -136,6 +139,7 @@ function convertModel(models: [string, ModelTypes, IParam[]][]): RequestTypes.Re
 }
 function genModels(
     comments: string[],
+    requestName: string,
     methodName: string,
     requestParams: RequestParam[],
     responseData: RequestResponse[],
@@ -147,15 +151,24 @@ function genModels(
         params: convertModel(paramModels),
         responses: convertModel(responseModels),
         comments,
+        requestName,
     } as RequestTypes.RequestData;
 }
 
 export function generate(response: string): RequestTypes.RequestData {
     const responseJson = JSON.parse(response);
-    const methodName = snake2pascal(responseJson.data.article.info.title);
+    if (responseJson.code !== 0) {
+        return {
+            comments: ['请求失败，未正常返回接口文档数据'],
+        } as RequestTypes.RequestData;
+    }
+    const pathname = responseJson.data.article.info.title;
+    const methodName = utils.snake2pascal(pathname);
+    const requestName = utils.pathname2requestName(pathname);
     const content = JSON.parse(responseJson.data.article.content);
     return genModels(
         [location.href],
+        requestName,
         methodName,
         content.request.requestParam || [],
         content.response.responseData || [],

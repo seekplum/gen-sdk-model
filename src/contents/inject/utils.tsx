@@ -2,11 +2,31 @@ import { Platform } from '@/constants';
 import { parsePlatform } from '@/utils/utils';
 
 function checkRequestRequired(platform: Platform, method: string, url: string): boolean {
-    return (
+    if (
         platform === Platform.DOUDIAN &&
         method === 'GET' &&
         url.includes('/doc/external/open/queryDocArticleDetail')
-    );
+    ) {
+        return true;
+    }
+    if (
+        platform === Platform.ALIPAY &&
+        method === 'POST' &&
+        url.includes('/cms/site/queryCatalogContent.json')
+    ) {
+        return true;
+    }
+    return false;
+}
+
+export function getTargetOrigin(platform: Platform): string {
+    if (platform === Platform.DOUDIAN) {
+        return 'https://op.jinritemai.com/docs/api-docs/*/*';
+    }
+    if (platform === Platform.ALIPAY) {
+        return 'https://opendocs.alipay.com/solution/*';
+    }
+    return '';
 }
 
 export function getRequestPlatform(host: string, method: string, url: string): Platform | null {

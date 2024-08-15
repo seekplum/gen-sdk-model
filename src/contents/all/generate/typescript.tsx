@@ -1,7 +1,6 @@
 import { type Platform, VariableTypes } from '@/constants';
 import type { IExtensionConfig } from '@/typings';
 import type * as RequestTypes from '@/typings/request';
-import { pascal2pathname } from '@/utils/utils';
 
 import { getParentModelName } from './utils';
 
@@ -13,6 +12,26 @@ const VariableTypesMap: Record<string, string> = {
     [VariableTypes.LIST]: 'Array',
     [VariableTypes.OBJECT]: 'object',
 };
+
+function buildFieldArgs(childParam: RequestTypes.IParam, config: IExtensionConfig): string {
+    const args = [];
+    if (config.needDescription) {
+        args.push(`description: ${childParam.description}`);
+    }
+    if (config.needExample && childParam.example !== undefined) {
+        args.push(`example: ${childParam.example}`);
+    }
+    return args.length > 0 ? ` /** ${args.join(', ')} */` : '';
+}
+
+function buildTypeArgs(childParam: RequestTypes.IParam): string {
+    const variableType = VariableTypesMap[childParam.type] || childParam.type;
+    const originChildType =
+        VariableTypesMap[childParam.childType || ''] || childParam.childType || '';
+    const childType =
+        originChildType === VariableTypes.OBJECT ? childParam.childType : originChildType;
+    return childParam.childType ? `${variableType}<${childType}>` : variableType;
+}
 
 function generateByTypescript(
     platform: Platform,
@@ -31,22 +50,9 @@ function generateByTypescript(
         if (childParam.deprecated && !config.needDeprecated) {
             continue;
         }
-        const args = [];
-        if (config.needDescription) {
-            args.push(`description: ${childParam.description}`);
-        }
-        if (config.needExample && childParam.example !== undefined) {
-            args.push(`example: ${childParam.example}`);
-        }
         const defaultVal = childParam.required ? '' : '?';
-        const fieldArgs = args.length > 0 ? ` /** ${args.join(', ')} */` : '';
-
-        const variableType = VariableTypesMap[childParam.type] || childParam.type;
-        const originChildType =
-            VariableTypesMap[childParam.childType || ''] || childParam.childType || '';
-        const childType =
-            originChildType === VariableTypes.OBJECT ? childParam.childType : originChildType;
-        const typeName = childParam.childType ? `${variableType}<${childType}>` : variableType;
+        const typeName = buildTypeArgs(childParam);
+        const fieldArgs = buildFieldArgs(childParam, config);
         rawCodes.push(`    ${childParam.name}${defaultVal}: ${typeName}${fieldArgs};`);
     }
     rawCodes.push('}', '    ', '    ');
@@ -71,10 +77,10 @@ export function generate(
         rawCodes.push(...generateByTypescript(platform, param, config));
     }
 
-    if (requestData.methodName && params.length > 0) {
+    if (requestData.methodName && requestData.requestName && params.length > 0) {
         rawCodes.push(
             `type ${requestData.methodName}Request = ${config.modelConfig[platform].requestBaseType} & {`,
-            `    method: "${pascal2pathname(requestData.methodName)}",`,
+            `    method: "${requestData.requestName}",`,
             `    param: ${params[params.length - 1].className},`,
             '}',
             '    ',

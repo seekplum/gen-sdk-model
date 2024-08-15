@@ -3,9 +3,9 @@ import { message, Spin } from 'antd';
 import { Observer } from 'mobx-react-lite';
 import * as React from 'react';
 import SyntaxHighlighter from 'react-syntax-highlighter';
-import { vs2015 } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import { vs, vs2015 } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
-import type { Language, Platform } from '@/constants';
+import { type Language, Platform } from '@/constants';
 
 import { generate, generateByDocument } from '../generate';
 import styles from './index.scss';
@@ -26,11 +26,12 @@ export interface DocumentCodeProps extends BaseProps {
 }
 
 interface HighlighterCodeProps extends BaseProps {
+    platform: Platform;
     codes: string[];
 }
 
 function HighlighterCode(props: HighlighterCodeProps) {
-    const { codes, tipsHeight, language } = props;
+    const { codes, tipsHeight, language, platform } = props;
     const rawCode = codes.join('\n');
     const [windowHeight, setWindowHeight] = React.useState(window.innerHeight);
 
@@ -66,7 +67,7 @@ function HighlighterCode(props: HighlighterCodeProps) {
             <SyntaxHighlighter
                 showLineNumbers={true}
                 language={language.toLowerCase()}
-                style={vs2015}
+                style={platform === Platform.ALIPAY ? vs : vs2015}
                 customStyle={{ height: windowHeight - tipsHeight - 74 }}
             >
                 {rawCode}
@@ -86,6 +87,7 @@ export function ReadOnlyCode(props: ReadOnlyCodeProps) {
                 vm.initialized && !!vm.config ? (
                     <HighlighterCode
                         {...extra}
+                        platform={platform}
                         language={language}
                         codes={generate(platform, language, response, vm.config)}
                     />
@@ -114,6 +116,7 @@ export function DocumentCode(props: DocumentCodeProps) {
                 vm.initialized && !!vm.config ? (
                     <HighlighterCode
                         {...extra}
+                        platform={platform}
                         language={language}
                         codes={generateByDocument(platform, language, vm.config)}
                     />

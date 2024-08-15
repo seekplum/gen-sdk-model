@@ -17,19 +17,26 @@ export function pascal2pathname(name: string): string {
     return pathname.charAt(0).toLowerCase() + pathname.slice(1);
 }
 
+export function pathname2requestName(pathname: string): string {
+    return pathname.replaceAll('/', '.');
+}
+
 export function parsePlatform(host: string): Platform | null {
     switch (host) {
         case 'op.jinritemai.com':
             return Platform.DOUDIAN;
         case 'developers.weixin.qq.com':
             return Platform.WEIXIN;
+        case 'opendocs.alipay.com':
+        case 'ideservice.alipay.com':
+            return Platform.ALIPAY;
         default:
             return null;
     }
 }
 
 export function removeSpecialCharacters(value: string): string {
-    return value.replace(/[\n"\\]/g, '');
+    return value.replace(/[\n\r"\\]/g, '');
 }
 
 export async function sleep(ms: number): Promise<void> {

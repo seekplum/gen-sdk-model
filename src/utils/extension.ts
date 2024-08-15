@@ -28,6 +28,13 @@ export const defaultWeixinRequestConfig = {
     requestBaseType: REQUEST_PLATFORM_MAP[Platform.WEIXIN].request,
 } as IRequestConfig;
 
+export const defaultAlipayRequestConfig = {
+    childBaseType: REQUEST_PLATFORM_MAP[Platform.ALIPAY].child,
+    paramBaseType: REQUEST_PLATFORM_MAP[Platform.ALIPAY].param,
+    responseBaseType: REQUEST_PLATFORM_MAP[Platform.ALIPAY].response,
+    requestBaseType: REQUEST_PLATFORM_MAP[Platform.ALIPAY].request,
+} as IRequestConfig;
+
 export const defaultExtensionConfig = {
     isExpanded: true,
 
@@ -41,15 +48,25 @@ export const defaultExtensionConfig = {
     modelConfig: {
         [Platform.DOUDIAN]: defaultDoudianRequestConfig,
         [Platform.WEIXIN]: defaultWeixinRequestConfig,
+        [Platform.ALIPAY]: defaultAlipayRequestConfig,
     },
 } as IExtensionConfig;
 
 export class Extension {
     static getConfig = async (): Promise<IExtensionConfig> => {
         const data = await chrome.storage.local.get(EXTENSION_CONFIG_NAME);
+        if (!data || !data[EXTENSION_CONFIG_NAME]) {
+            return defaultExtensionConfig;
+        }
+        const { modelConfig: defaultModelConfig, ...defaultExtra } = defaultExtensionConfig;
+        const { modelConfig, ...extra } = data[EXTENSION_CONFIG_NAME];
         return {
-            ...defaultExtensionConfig,
-            ...data[EXTENSION_CONFIG_NAME],
+            ...defaultExtra,
+            ...extra,
+            modelConfig: {
+                ...defaultModelConfig,
+                ...modelConfig,
+            },
         };
     };
 

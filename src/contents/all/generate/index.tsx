@@ -2,6 +2,7 @@ import { Language, Platform } from '@/constants';
 import type { IExtensionConfig } from '@/typings';
 import type * as RequestTypes from '@/typings/request';
 
+import { generate as generateAlipay } from './alipay';
 import { generate as generateDoudian } from './doudian';
 import { generate as generateByPython } from './python';
 import { generate as generateByTypescript } from './typescript';
@@ -31,6 +32,8 @@ export function generate(
     let requestData: RequestTypes.RequestData | null = null;
     if (platform === Platform.DOUDIAN) {
         requestData = generateDoudian(response);
+    } else if (platform === Platform.ALIPAY) {
+        requestData = generateAlipay(response);
     }
     if (!requestData) {
         throw new Error(`Unsupported platform: ${platform}`);

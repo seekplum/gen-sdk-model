@@ -15,7 +15,11 @@ const manifest: Manifest.WebExtensionManifest = {
     },
     web_accessible_resources: [
         {
-            matches: ['https://op.jinritemai.com/*', 'https://developers.weixin.qq.com/*'],
+            matches: [
+                'https://op.jinritemai.com/*',
+                'https://developers.weixin.qq.com/*',
+                'https://opendocs.alipay.com/*',
+            ],
             resources: ['js/inject.js', 'js/injected.js', 'icons/*', 'images/*', 'fonts/*'],
         },
     ],
@@ -29,6 +33,8 @@ const manifest: Manifest.WebExtensionManifest = {
                 'https://developers.weixin.qq.com/doc/channels/API/*',
                 'https://developers.weixin.qq.com/doc/ministore/*',
                 'https://developers.weixin.qq.com/miniprogram/dev/*',
+                'https://opendocs.alipay.com/solution/*',
+                'https://opendocs.alipay.com/open/*',
             ],
             css: ['css/all.css'],
             run_at: 'document_start',

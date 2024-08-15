@@ -19,11 +19,13 @@ export enum EventNames {
 export enum Platform {
     DOUDIAN = 'doudian',
     WEIXIN = 'weixin',
+    ALIPAY = 'alipay',
 }
 
 export const PlatformNames = {
     [Platform.DOUDIAN]: '抖店',
     [Platform.WEIXIN]: '微信',
+    [Platform.ALIPAY]: '支付宝',
 };
 
 export enum VariableTypes {
@@ -66,5 +68,11 @@ export const REQUEST_PLATFORM_MAP = {
         param: 'WopParamBase',
         response: 'WopResponseBase',
         request: 'WopRequestBase',
+    } as BaseModel,
+    [Platform.ALIPAY]: {
+        child: 'BaseModel',
+        param: 'TopParamBase',
+        response: 'TopResponseBase',
+        request: 'TopRequestBase',
     } as BaseModel,
 };
