@@ -75,6 +75,50 @@ async function fetchAlibabaModels(data: PlatformResponseData): Promise<PlatformR
     } as PlatformResponseData;
 }
 
+async function fetchKuaishouModelInfo(structureId: string): Promise<any[]> {
+    const url = `https://open.kwaixiaodian.com/rest/open/platform/doc/structure/detail?id=${structureId}`;
+    const resp = await fetch(url, {
+        headers: {},
+        body: null,
+        method: 'GET',
+        mode: 'cors',
+        credentials: 'include',
+    });
+    if (resp.status !== 200) {
+        throw new Error(`Failed to fetch ${url}`);
+    }
+    const json = await resp.json();
+    if (json.status !== 200) {
+        throw new Error(`Failed to json parse ${url}`);
+    }
+    return json.data.params;
+}
+
+async function fetchKuaishouModels(data: PlatformResponseData): Promise<PlatformResponseData> {
+    const responseJson = JSON.parse(data.response);
+    if (responseJson.status !== 200) {
+        return data;
+    }
+
+    const { data: dataJson } = responseJson;
+    const { inputParams, outputParams } = dataJson;
+
+    const stack = [...inputParams, ...outputParams];
+    while (stack.length > 0) {
+        const param = stack.pop();
+
+        if (param.structureId) {
+            const children = await fetchKuaishouModelInfo(param.structureId);
+            stack.push(...children.filter((child) => !!child.structureId));
+            param.children = children;
+        }
+    }
+    return {
+        platform: data.platform,
+        response: JSON.stringify(responseJson),
+    } as PlatformResponseData;
+}
+
 class AppVM {
     constructor() {
         makeObservable(this);
@@ -162,6 +206,8 @@ class AppVM {
         let { data } = contentData;
         if (data && data.platform === Platform.ALIBABA) {
             data = await fetchAlibabaModels(data);
+        } else if (data && data.platform === Platform.KUAISHOU) {
+            data = await fetchKuaishouModels(data);
         }
         runInAction(() => {
             this.platformResponse = data;

@@ -22,7 +22,7 @@ export function pathname2requestName(pathname: string): string {
 }
 
 export function parseArrayName(name: string): string {
-    return name.replace('[]', '');
+    return name.replace(/List|[<>[\]]/g, '');
 }
 
 export function parseObjectName(name: string): string {
@@ -41,6 +41,8 @@ export function parsePlatform(host: string): Platform | null {
             return Platform.ALIPAY;
         case 'open.1688.com':
             return Platform.ALIBABA;
+        case 'open.kwaixiaodian.com':
+            return Platform.KUAISHOU;
         default:
             return null;
     }

@@ -98,7 +98,7 @@ function sendResponseToContent(
         if (!url) {
             return;
         }
-        if (!(this.responseType !== 'blob' && this.responseText)) {
+        if (!(['', 'text'].includes(this.responseType) && this.responseText)) {
             return;
         }
         const method = this._method;

@@ -82,6 +82,7 @@ const App: React.FC = () => {
     const [weixinForm] = Form.useForm();
     const [aliapyForm] = Form.useForm();
     const [alibabaForm] = Form.useForm();
+    const [kuaishouForm] = Form.useForm();
 
     const [messageApi, contextHolder] = message.useMessage();
     const handleChangePlatform = React.useCallback(
@@ -92,9 +93,10 @@ const App: React.FC = () => {
             if (vm.platform === Platform.WEIXIN) weixinForm.submit();
             if (vm.platform === Platform.ALIPAY) aliapyForm.submit();
             if (vm.platform === Platform.ALIBABA) alibabaForm.submit();
+            if (vm.platform === Platform.KUAISHOU) kuaishouForm.submit();
             vm.onChangePlatform(value);
         },
-        [vm, doudianForm, weixinForm, aliapyForm, alibabaForm],
+        [vm, doudianForm, weixinForm, aliapyForm, alibabaForm, kuaishouForm],
     );
     const handleSubmit = React.useCallback(
         (values: Record<string, any>) => {
@@ -102,6 +104,7 @@ const App: React.FC = () => {
             weixinForm.submit();
             aliapyForm.submit();
             alibabaForm.submit();
+            kuaishouForm.submit();
 
             vm.handleSubmit(values);
             messageApi.open({
@@ -109,7 +112,7 @@ const App: React.FC = () => {
                 content: '保存成功',
             });
         },
-        [vm, doudianForm, weixinForm, aliapyForm, aliapyForm],
+        [vm, doudianForm, weixinForm, aliapyForm, aliapyForm, kuaishouForm],
     );
 
     return (
@@ -202,6 +205,9 @@ const App: React.FC = () => {
                                 <Radio value={Platform.ALIBABA}>
                                     {PlatformNames[Platform.ALIBABA]}
                                 </Radio>
+                                <Radio value={Platform.KUAISHOU}>
+                                    {PlatformNames[Platform.KUAISHOU]}
+                                </Radio>
                             </Radio.Group>
                         </Form.Item>
                         <Form.Item label="" wrapperCol={{ offset: 8 }}>
@@ -247,6 +253,15 @@ const App: React.FC = () => {
                                 requestConfig={vm.modelConfig[Platform.ALIBABA]}
                                 onFinish={(values: IRequestConfig) =>
                                     vm.handleModelConfig(Platform.ALIBABA, values)
+                                }
+                            />
+                        )}
+                        {Platform.KUAISHOU === vm.platform && (
+                            <RequestConfig
+                                form={kuaishouForm}
+                                requestConfig={vm.modelConfig[Platform.KUAISHOU]}
+                                onFinish={(values: IRequestConfig) =>
+                                    vm.handleModelConfig(Platform.KUAISHOU, values)
                                 }
                             />
                         )}

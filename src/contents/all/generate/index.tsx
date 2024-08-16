@@ -7,6 +7,7 @@ import {
   generateAlibaba,
   generateAlipay,
   generateDoudian,
+  generateKuaishou,
   generateWeixin,
 } from './platforms';
 
@@ -32,16 +33,26 @@ export function generate(
     config: IExtensionConfig,
 ): string[] {
     let requestData: RequestTypes.RequestData | null = null;
-    // eslint-disable-next-line unicorn/prefer-switch
-    if (platform === Platform.DOUDIAN) {
-        requestData = generateDoudian(response);
-    } else if (platform === Platform.ALIPAY) {
-        requestData = generateAlipay(response);
-    } else if (platform === Platform.ALIBABA) {
-        requestData = generateAlibaba(response);
-    }
-    if (!requestData) {
-        throw new Error(`Unsupported platform: ${platform}`);
+    try {
+        // eslint-disable-next-line unicorn/prefer-switch
+        if (platform === Platform.DOUDIAN) {
+            requestData = generateDoudian(response);
+        } else if (platform === Platform.ALIPAY) {
+            requestData = generateAlipay(response);
+        } else if (platform === Platform.ALIBABA) {
+            requestData = generateAlibaba(response);
+        } else if (platform === Platform.KUAISHOU) {
+            requestData = generateKuaishou(response);
+        }
+        if (!requestData) {
+            requestData = {
+                comments: [`Unsupported platform: ${platform}`],
+            } as RequestTypes.RequestData;
+        }
+    } catch (error) {
+        requestData = {
+            comments: [`未知错误: ${error}`],
+        } as RequestTypes.RequestData;
     }
     return generateCodes(platform, language, requestData, config);
 }

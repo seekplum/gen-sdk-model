@@ -21,6 +21,7 @@ export enum Platform {
     WEIXIN = 'weixin',
     ALIPAY = 'alipay',
     ALIBABA = 'alibaba',
+    KUAISHOU = 'kuaishou',
 }
 
 export const PlatformNames = {
@@ -28,6 +29,7 @@ export const PlatformNames = {
     [Platform.WEIXIN]: '微信',
     [Platform.ALIPAY]: '支付宝',
     [Platform.ALIBABA]: '阿里巴巴',
+    [Platform.KUAISHOU]: '快手',
 };
 
 export enum VariableTypes {
@@ -83,5 +85,11 @@ export const REQUEST_PLATFORM_MAP = {
         param: 'TopParamBase',
         response: 'TopResponseBase',
         request: 'TopRequestBase',
+    } as BaseModel,
+    [Platform.KUAISHOU]: {
+        child: 'BaseModel',
+        param: 'KopParamBase',
+        response: 'KopResponseBase',
+        request: 'KopRequestBase',
     } as BaseModel,
 };

@@ -12,6 +12,7 @@ export interface IModelConfig {
     [Platform.WEIXIN]: IRequestConfig;
     [Platform.ALIPAY]: IRequestConfig;
     [Platform.ALIBABA]: IRequestConfig;
+    [Platform.KUAISHOU]: IRequestConfig;
 }
 
 export interface IExtensionConfig {

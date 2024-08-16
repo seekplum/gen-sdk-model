@@ -23,6 +23,13 @@ function checkRequestRequired(platform: Platform, method: string, url: string): 
     ) {
         return true;
     }
+    if (
+        platform === Platform.KUAISHOU &&
+        method === 'GET' &&
+        url.includes('/rest/open/platform/doc/api/name/detail')
+    ) {
+        return true;
+    }
     return false;
 }
 
@@ -35,6 +42,9 @@ export function getTargetOrigin(platform: Platform): string {
     }
     if (platform === Platform.ALIBABA) {
         return 'https://open.1688.com/api/*';
+    }
+    if (platform === Platform.KUAISHOU) {
+        return 'https://open.kwaixiaodian.com/zone/new/docs/*';
     }
     return '';
 }
