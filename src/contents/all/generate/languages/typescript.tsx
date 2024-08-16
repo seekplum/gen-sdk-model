@@ -2,7 +2,7 @@ import { type Platform, VariableTypes } from '@/constants';
 import type { IExtensionConfig } from '@/typings';
 import type * as RequestTypes from '@/typings/request';
 
-import { getParentModelName } from './utils';
+import { getParentModelName } from '../utils';
 
 const VariableTypesMap: Record<string, string> = {
     [VariableTypes.STRING]: 'string',

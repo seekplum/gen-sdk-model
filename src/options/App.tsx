@@ -87,16 +87,9 @@ const App: React.FC = () => {
         (e: RadioChangeEvent) => {
             const { value } = e.target;
             // eslint-disable-next-line unicorn/prefer-switch
-            if (value === Platform.DOUDIAN) {
-                weixinForm.submit();
-                aliapyForm.submit();
-            } else if (value === Platform.WEIXIN) {
-                doudianForm.submit();
-                aliapyForm.submit();
-            } else if (value === Platform.ALIPAY) {
-                doudianForm.submit();
-                weixinForm.submit();
-            }
+            if (vm.platform === Platform.DOUDIAN) doudianForm.submit();
+            if (vm.platform === Platform.WEIXIN) weixinForm.submit();
+            if (vm.platform === Platform.ALIPAY) aliapyForm.submit();
             vm.onChangePlatform(value);
         },
         [vm, doudianForm, weixinForm, aliapyForm],

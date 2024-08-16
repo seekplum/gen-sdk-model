@@ -2,11 +2,8 @@ import { Language, Platform } from '@/constants';
 import type { IExtensionConfig } from '@/typings';
 import type * as RequestTypes from '@/typings/request';
 
-import { generate as generateAlipay } from './alipay';
-import { generate as generateDoudian } from './doudian';
-import { generate as generateByPython } from './python';
-import { generate as generateByTypescript } from './typescript';
-import { generate as generateWeixin } from './weixin';
+import { generateByPython, generateByTypescript } from './languages';
+import { generateAlipay, generateDoudian, generateWeixin } from './platforms';
 
 function generateCodes(
     platform: Platform,

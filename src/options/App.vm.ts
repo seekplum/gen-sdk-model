@@ -66,7 +66,6 @@ class OptionsSettingsVM {
             return;
         }
         this.modelConfig = { ...this.modelConfig, [platform]: values };
-        this.saveConfig();
     };
 }
 
