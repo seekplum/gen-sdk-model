@@ -86,10 +86,6 @@ function parseArrayChildType(type: string): string {
     return TYPE_MAP[tmpType] || tmpType;
 }
 
-function parseName(name: string): string {
-    return name.replace('[]', '');
-}
-
 function parseNameByOject(name: string): string {
     return name.toLowerCase().replace(/object|objct|[()]/g, '');
 }
@@ -115,7 +111,7 @@ function parseTypeByType(type: string): [string, string] {
 
 function parseTypeByName(name: string): [string, string] {
     if (name.includes('[]')) {
-        return [VariableTypes.LIST, utils.snake2pascal(parseName(name))];
+        return [VariableTypes.LIST, utils.snake2pascal(utils.parseArrayName(name))];
     }
     return [utils.snake2pascal(name), ''];
 }
@@ -187,7 +183,7 @@ function convertModels(
         // 复杂类型
         if (param.name.includes('.')) {
             const names = param.name.split('.');
-            const baseName = parseName(names[0]);
+            const baseName = utils.parseArrayName(names[0]);
             let rootChild = childParams.find((item) => item.name === baseName);
             if (!rootChild) {
                 // 说明文档中没有该类型
@@ -214,16 +210,16 @@ function convertModels(
                     if (tmpName.includes('[]')) {
                         [tmpType2, tmpChildType2] = parseTypeByName(tmpName);
                     } else {
-                        tmpType2 = utils.snake2pascal(parseName(tmpName));
+                        tmpType2 = utils.snake2pascal(utils.parseArrayName(tmpName));
                         tmpChildType2 = '';
                     }
                 } else {
                     [tmpType2, tmpChildType2] = parseTypeByType(param.type);
                     if (tmpType2 === VariableTypes.LIST && !tmpChildType2) {
-                        tmpChildType2 = utils.snake2pascal(parseName(tmpName));
+                        tmpChildType2 = utils.snake2pascal(utils.parseArrayName(tmpName));
                     }
                 }
-                const tmpName2 = parseName(tmpName);
+                const tmpName2 = utils.parseArrayName(tmpName);
 
                 const tmpChild = {
                     name: tmpName2,
@@ -250,7 +246,7 @@ function convertModels(
                 [tmpType1, tmpChildType1] = parseTypeByType(param.type);
             }
             childParams.push({
-                name: parseName(param.name),
+                name: utils.parseArrayName(param.name),
                 type: tmpType1,
                 childType: tmpChildType1,
                 required: param.required,

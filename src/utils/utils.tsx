@@ -21,6 +21,15 @@ export function pathname2requestName(pathname: string): string {
     return pathname.replaceAll('/', '.');
 }
 
+export function parseArrayName(name: string): string {
+    return name.replace('[]', '');
+}
+
+export function parseObjectName(name: string): string {
+    const values = name.split('.');
+    return values[values.length - 1];
+}
+
 export function parsePlatform(host: string): Platform | null {
     switch (host) {
         case 'op.jinritemai.com':
@@ -30,6 +39,8 @@ export function parsePlatform(host: string): Platform | null {
         case 'opendocs.alipay.com':
         case 'ideservice.alipay.com':
             return Platform.ALIPAY;
+        case 'open.1688.com':
+            return Platform.ALIBABA;
         default:
             return null;
     }

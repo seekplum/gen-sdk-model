@@ -34,6 +34,12 @@ export const defaultAlipayRequestConfig = {
     responseBaseType: REQUEST_PLATFORM_MAP[Platform.ALIPAY].response,
     requestBaseType: REQUEST_PLATFORM_MAP[Platform.ALIPAY].request,
 } as IRequestConfig;
+export const defaultAlibabaRequestConfig = {
+    childBaseType: REQUEST_PLATFORM_MAP[Platform.ALIBABA].child,
+    paramBaseType: REQUEST_PLATFORM_MAP[Platform.ALIBABA].param,
+    responseBaseType: REQUEST_PLATFORM_MAP[Platform.ALIBABA].response,
+    requestBaseType: REQUEST_PLATFORM_MAP[Platform.ALIBABA].request,
+} as IRequestConfig;
 
 export const defaultExtensionConfig = {
     isExpanded: true,
@@ -49,6 +55,7 @@ export const defaultExtensionConfig = {
         [Platform.DOUDIAN]: defaultDoudianRequestConfig,
         [Platform.WEIXIN]: defaultWeixinRequestConfig,
         [Platform.ALIPAY]: defaultAlipayRequestConfig,
+        [Platform.ALIBABA]: defaultAlibabaRequestConfig,
     },
 } as IExtensionConfig;
 

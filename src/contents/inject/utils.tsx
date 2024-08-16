@@ -16,6 +16,13 @@ function checkRequestRequired(platform: Platform, method: string, url: string): 
     ) {
         return true;
     }
+    if (
+        platform === Platform.ALIBABA &&
+        method === 'GET' &&
+        url.includes('/api/data/getApiDetail.json')
+    ) {
+        return true;
+    }
     return false;
 }
 
@@ -25,6 +32,9 @@ export function getTargetOrigin(platform: Platform): string {
     }
     if (platform === Platform.ALIPAY) {
         return 'https://opendocs.alipay.com/solution/*';
+    }
+    if (platform === Platform.ALIBABA) {
+        return 'https://open.1688.com/api/*';
     }
     return '';
 }

@@ -81,6 +81,7 @@ const App: React.FC = () => {
     const [doudianForm] = Form.useForm();
     const [weixinForm] = Form.useForm();
     const [aliapyForm] = Form.useForm();
+    const [alibabaForm] = Form.useForm();
 
     const [messageApi, contextHolder] = message.useMessage();
     const handleChangePlatform = React.useCallback(
@@ -90,15 +91,17 @@ const App: React.FC = () => {
             if (vm.platform === Platform.DOUDIAN) doudianForm.submit();
             if (vm.platform === Platform.WEIXIN) weixinForm.submit();
             if (vm.platform === Platform.ALIPAY) aliapyForm.submit();
+            if (vm.platform === Platform.ALIBABA) alibabaForm.submit();
             vm.onChangePlatform(value);
         },
-        [vm, doudianForm, weixinForm, aliapyForm],
+        [vm, doudianForm, weixinForm, aliapyForm, alibabaForm],
     );
     const handleSubmit = React.useCallback(
         (values: Record<string, any>) => {
             doudianForm.submit();
             weixinForm.submit();
             aliapyForm.submit();
+            alibabaForm.submit();
 
             vm.handleSubmit(values);
             messageApi.open({
@@ -106,7 +109,7 @@ const App: React.FC = () => {
                 content: '保存成功',
             });
         },
-        [vm, doudianForm, weixinForm, aliapyForm],
+        [vm, doudianForm, weixinForm, aliapyForm, aliapyForm],
     );
 
     return (
@@ -196,6 +199,9 @@ const App: React.FC = () => {
                                 <Radio value={Platform.ALIPAY}>
                                     {PlatformNames[Platform.ALIPAY]}
                                 </Radio>
+                                <Radio value={Platform.ALIBABA}>
+                                    {PlatformNames[Platform.ALIBABA]}
+                                </Radio>
                             </Radio.Group>
                         </Form.Item>
                         <Form.Item label="" wrapperCol={{ offset: 8 }}>
@@ -232,6 +238,15 @@ const App: React.FC = () => {
                                 requestConfig={vm.modelConfig[Platform.ALIPAY]}
                                 onFinish={(values: IRequestConfig) =>
                                     vm.handleModelConfig(Platform.ALIPAY, values)
+                                }
+                            />
+                        )}
+                        {Platform.ALIBABA === vm.platform && (
+                            <RequestConfig
+                                form={alibabaForm}
+                                requestConfig={vm.modelConfig[Platform.ALIBABA]}
+                                onFinish={(values: IRequestConfig) =>
+                                    vm.handleModelConfig(Platform.ALIBABA, values)
                                 }
                             />
                         )}

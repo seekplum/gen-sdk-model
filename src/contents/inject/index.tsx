@@ -1,34 +1,44 @@
 /// <reference path="index.d.ts" />
 
-import { CRX_NAME, EventNames, MessageModules } from '@/constants';
+import { CRX_NAME, EventNames, MessageModules, Platform } from '@/constants';
 import type {
   ContentMessageData,
   InjectionMessageData,
   PlatformResponseData,
 } from '@/utils';
 import * as printer from '@/utils/printer';
+import { sleep } from '@/utils/utils';
 
 import * as utils from './utils';
 
 printer.consoleLog('injected chrome extension data0');
 
-function sendMessageToContent(
+async function sendMessageToContent(
     eventName: EventNames,
     data: ContentMessageData<PlatformResponseData>,
-): void {
+): Promise<void> {
     const targetOrigin = utils.getTargetOrigin(data.data.platform);
     if (!targetOrigin) {
         return;
     }
-    window.postMessage(
-        {
-            origin: CRX_NAME,
-            module: MessageModules.INJECT,
-            eventName,
-            data,
-        } as InjectionMessageData<ContentMessageData>,
-        targetOrigin,
-    );
+    let delayMs = 100;
+    let retries = 1;
+    if (data.data.platform === Platform.ALIBABA) {
+        delayMs = 300;
+        retries = 2;
+    }
+    for (let i = 0; i < retries; i++) {
+        await sleep(delayMs);
+        window.postMessage(
+            {
+                origin: CRX_NAME,
+                module: MessageModules.INJECT,
+                eventName,
+                data,
+            } as InjectionMessageData<ContentMessageData>,
+            targetOrigin,
+        );
+    }
 }
 
 function sendResponseToContent(

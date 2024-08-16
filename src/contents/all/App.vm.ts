@@ -5,7 +5,7 @@ import {
   EventNames,
   type Language,
   MessageModules,
-  type Platform,
+  Platform,
 } from '@/constants';
 import type { IExtensionConfig } from '@/typings';
 import type {
@@ -14,7 +14,66 @@ import type {
   PlatformResponseData,
 } from '@/utils';
 import { Extension } from '@/utils';
-import { parsePlatform } from '@/utils/utils';
+import * as utils from '@/utils/utils';
+
+async function fetchAlibabaModelInfo(
+    namespace: string,
+    apiname: string,
+    typeName: string,
+): Promise<any[]> {
+    const params = {
+        _input_charset: 'utf8',
+        apiname,
+        namespace,
+        version: '1',
+        type: '2',
+        typeName,
+    };
+    const url = new URL('https://open.1688.com/api/data/getModelInfo.json');
+    url.search = new URLSearchParams(params).toString();
+    const resp = await fetch(url.toString(), {
+        headers: {},
+        body: null,
+        method: 'GET',
+        mode: 'cors',
+        credentials: 'include',
+    });
+    if (resp.status !== 200) {
+        throw new Error(`Failed to fetch ${url.toString()}`);
+    }
+    const json = await resp.json();
+    if (!json.success) {
+        throw new Error(`Failed to json parse ${url.toString()}`);
+    }
+    return json.result;
+}
+
+async function fetchAlibabaModels(data: PlatformResponseData): Promise<PlatformResponseData> {
+    const responseJson = JSON.parse(data.response);
+    if (!responseJson.success) {
+        return data;
+    }
+    const { result } = responseJson;
+    const { name, namespace, apiAppParamVOList: params, apiReturnParamVOList: responses } = result;
+    const stack = [...params, ...responses];
+    while (stack.length > 0) {
+        const param = stack.pop();
+
+        if (param.complexTypeFlag) {
+            const children = await fetchAlibabaModelInfo(
+                namespace,
+                name,
+                utils.parseArrayName(param.typeName),
+            );
+            stack.push(...children.filter((child) => child.complexTypeFlag));
+            param.children = children;
+        }
+    }
+    return {
+        platform: data.platform,
+        response: JSON.stringify(responseJson),
+    } as PlatformResponseData;
+}
 
 class AppVM {
     constructor() {
@@ -26,7 +85,7 @@ class AppVM {
     init = () => {
         window.addEventListener('message', this.handleMessage);
         this.fetchConfig();
-        this.platform = parsePlatform(location.host);
+        this.platform = utils.parsePlatform(location.host);
         setTimeout(() => {
             runInAction(() => {
                 this.initialized = true;
@@ -100,7 +159,10 @@ class AppVM {
             return;
         }
         const { data: contentData } = eventData;
-        const { data } = contentData;
+        let { data } = contentData;
+        if (data && data.platform === Platform.ALIBABA) {
+            data = await fetchAlibabaModels(data);
+        }
         runInAction(() => {
             this.platformResponse = data;
         });

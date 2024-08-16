@@ -20,12 +20,14 @@ export enum Platform {
     DOUDIAN = 'doudian',
     WEIXIN = 'weixin',
     ALIPAY = 'alipay',
+    ALIBABA = 'alibaba',
 }
 
 export const PlatformNames = {
     [Platform.DOUDIAN]: '抖店',
     [Platform.WEIXIN]: '微信',
     [Platform.ALIPAY]: '支付宝',
+    [Platform.ALIBABA]: '阿里巴巴',
 };
 
 export enum VariableTypes {
@@ -35,6 +37,7 @@ export enum VariableTypes {
     BOOL = 'bool',
     OBJECT = 'object',
     LIST = 'list',
+    DATE = 'datetime',
 }
 
 export enum ModelTypes {
@@ -70,6 +73,12 @@ export const REQUEST_PLATFORM_MAP = {
         request: 'WopRequestBase',
     } as BaseModel,
     [Platform.ALIPAY]: {
+        child: 'BaseModel',
+        param: 'TopParamBase',
+        response: 'TopResponseBase',
+        request: 'TopRequestBase',
+    } as BaseModel,
+    [Platform.ALIBABA]: {
         child: 'BaseModel',
         param: 'TopParamBase',
         response: 'TopResponseBase',

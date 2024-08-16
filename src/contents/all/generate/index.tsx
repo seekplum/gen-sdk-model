@@ -3,7 +3,12 @@ import type { IExtensionConfig } from '@/typings';
 import type * as RequestTypes from '@/typings/request';
 
 import { generateByPython, generateByTypescript } from './languages';
-import { generateAlipay, generateDoudian, generateWeixin } from './platforms';
+import {
+  generateAlibaba,
+  generateAlipay,
+  generateDoudian,
+  generateWeixin,
+} from './platforms';
 
 function generateCodes(
     platform: Platform,
@@ -27,10 +32,13 @@ export function generate(
     config: IExtensionConfig,
 ): string[] {
     let requestData: RequestTypes.RequestData | null = null;
+    // eslint-disable-next-line unicorn/prefer-switch
     if (platform === Platform.DOUDIAN) {
         requestData = generateDoudian(response);
     } else if (platform === Platform.ALIPAY) {
         requestData = generateAlipay(response);
+    } else if (platform === Platform.ALIBABA) {
+        requestData = generateAlibaba(response);
     }
     if (!requestData) {
         throw new Error(`Unsupported platform: ${platform}`);

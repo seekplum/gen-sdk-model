@@ -11,6 +11,7 @@ const VariableTypesMap: Record<string, string> = {
     [VariableTypes.BOOL]: 'boolean',
     [VariableTypes.LIST]: 'Array',
     [VariableTypes.OBJECT]: 'object',
+    [VariableTypes.DATE]: 'Date',
 };
 
 function buildFieldArgs(childParam: RequestTypes.IParam, config: IExtensionConfig): string {
