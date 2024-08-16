@@ -8,6 +8,7 @@ import {
   generateAlipay,
   generateDoudian,
   generateKuaishou,
+  generateTaobao,
   generateWeixin,
 } from './platforms';
 
@@ -43,6 +44,8 @@ export function generate(
             requestData = generateAlibaba(response);
         } else if (platform === Platform.KUAISHOU) {
             requestData = generateKuaishou(response);
+        } else if (platform === Platform.TAOBAO) {
+            requestData = generateTaobao(response);
         }
         if (!requestData) {
             requestData = {

@@ -30,6 +30,13 @@ function checkRequestRequired(platform: Platform, method: string, url: string): 
     ) {
         return true;
     }
+    if (
+        platform === Platform.TAOBAO &&
+        method === 'GET' &&
+        url.includes('/handler/document/getDocument.json')
+    ) {
+        return true;
+    }
     return false;
 }
 
@@ -45,6 +52,9 @@ export function getTargetOrigin(platform: Platform): string {
     }
     if (platform === Platform.KUAISHOU) {
         return 'https://open.kwaixiaodian.com/zone/new/docs/*';
+    }
+    if (platform === Platform.TAOBAO) {
+        return 'https://open.taobao.com/*';
     }
     return '';
 }

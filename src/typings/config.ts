@@ -13,6 +13,7 @@ export interface IModelConfig {
     [Platform.ALIPAY]: IRequestConfig;
     [Platform.ALIBABA]: IRequestConfig;
     [Platform.KUAISHOU]: IRequestConfig;
+    [Platform.TAOBAO]: IRequestConfig;
 }
 
 export interface IExtensionConfig {

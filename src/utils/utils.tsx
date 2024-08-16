@@ -43,6 +43,8 @@ export function parsePlatform(host: string): Platform | null {
             return Platform.ALIBABA;
         case 'open.kwaixiaodian.com':
             return Platform.KUAISHOU;
+        case 'open.taobao.com':
+            return Platform.TAOBAO;
         default:
             return null;
     }

@@ -46,6 +46,12 @@ export const defaultKuaishouRequestConfig = {
     responseBaseType: REQUEST_PLATFORM_MAP[Platform.KUAISHOU].response,
     requestBaseType: REQUEST_PLATFORM_MAP[Platform.KUAISHOU].request,
 } as IRequestConfig;
+export const defaultTaobaoRequestConfig = {
+    childBaseType: REQUEST_PLATFORM_MAP[Platform.TAOBAO].child,
+    paramBaseType: REQUEST_PLATFORM_MAP[Platform.TAOBAO].param,
+    responseBaseType: REQUEST_PLATFORM_MAP[Platform.TAOBAO].response,
+    requestBaseType: REQUEST_PLATFORM_MAP[Platform.TAOBAO].request,
+} as IRequestConfig;
 
 export const defaultExtensionConfig = {
     isExpanded: true,
@@ -63,6 +69,7 @@ export const defaultExtensionConfig = {
         [Platform.ALIPAY]: defaultAlipayRequestConfig,
         [Platform.ALIBABA]: defaultAlibabaRequestConfig,
         [Platform.KUAISHOU]: defaultAlibabaRequestConfig,
+        [Platform.TAOBAO]: defaultTaobaoRequestConfig,
     },
 } as IExtensionConfig;
 

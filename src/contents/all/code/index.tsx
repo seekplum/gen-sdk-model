@@ -67,7 +67,7 @@ function HighlighterCode(props: HighlighterCodeProps) {
             <SyntaxHighlighter
                 showLineNumbers={true}
                 language={language.toLowerCase()}
-                style={platform === Platform.ALIPAY ? vs : vs2015}
+                style={[Platform.ALIPAY, Platform.TAOBAO].includes(platform) ? vs : vs2015}
                 customStyle={{ height: windowHeight - tipsHeight - 74 }}
             >
                 {rawCode}
