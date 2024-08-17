@@ -80,7 +80,7 @@ export function generate(
 
     if (requestData.methodName && requestData.requestName && params.length > 0) {
         rawCodes.push(
-            `type ${requestData.methodName}Request = ${config.modelConfig[platform].requestBaseType} & {`,
+            `type ${requestData.methodName}Request = ${config.modelConfig[platform].request} & {`,
             `    method: "${requestData.requestName}",`,
             `    param: ${params[params.length - 1].className},`,
             '}',

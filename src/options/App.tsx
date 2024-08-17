@@ -1,10 +1,9 @@
-import type { FormInstance, RadioChangeEvent } from 'antd';
+import type { FormInstance } from 'antd';
 import {
   Button,
   Form,
   Input,
   message,
-  Radio,
   Select,
   Spin,
   Switch,
@@ -13,61 +12,60 @@ import {
 import { Observer } from 'mobx-react-lite';
 import * as React from 'react';
 
-import { Language, Platform, PlatformNames } from '@/constants';
-import type { IRequestConfig } from '@/typings';
+import { type BaseModel, Language, Platform, PlatformNames } from '@/constants';
 import { VERSION } from '@/utils';
+import * as printer from '@/utils/printer';
 
 import OptionsSettingsVM from './App.vm';
 
 import './App.scss';
 
-interface RequestConfigProps {
+function RequestConfig({
+    platform,
+    form,
+    requestConfig,
+}: {
+    platform: Platform;
     form: FormInstance;
-    requestConfig: IRequestConfig;
-    onFinish: (values: IRequestConfig) => void;
-}
-
-function RequestConfig(props: RequestConfigProps) {
-    const { form, requestConfig, onFinish } = props;
+    requestConfig: BaseModel;
+}) {
+    const platformName = PlatformNames[platform];
     return (
         <Form
-            form={form}
-            name="basic"
             labelCol={{ span: 8 }}
             wrapperCol={{ span: 16 }}
+            form={form}
+            name="basic"
             style={{ maxWidth: 600 }}
-            initialValues={{ remember: true }}
-            onFinish={onFinish}
-            autoComplete="off"
         >
             <Form.Item
-                label="子类参数基类名"
-                name="childBaseType"
-                initialValue={requestConfig.childBaseType}
+                label={`${platformName}子类参数基类名`}
+                name="child"
+                initialValue={requestConfig.child}
                 rules={[{ required: true, message: '请输入子类参数基类名' }]}
             >
                 <Input placeholder="请输入子类参数基类名" />
             </Form.Item>
             <Form.Item
-                label="请求参数基类名"
-                name="paramBaseType"
-                initialValue={requestConfig.paramBaseType}
+                label={`${platformName}请求参数基类名`}
+                name="param"
+                initialValue={requestConfig.param}
                 rules={[{ required: true, message: '请输入请求参数基类名' }]}
             >
                 <Input placeholder="请输入请求参数基类名" />
             </Form.Item>
             <Form.Item
-                label="响应参数基类名"
-                name="responseBaseType"
-                initialValue={requestConfig.responseBaseType}
+                label={`${platformName}响应参数基类名`}
+                name="response"
+                initialValue={requestConfig.response}
                 rules={[{ required: true, message: '请输入响应参数基类名' }]}
             >
                 <Input placeholder="请输入响应参数基类名" />
             </Form.Item>
             <Form.Item
-                label="请求基类名"
-                name="requestBaseType"
-                initialValue={requestConfig.requestBaseType}
+                label={`${platformName}请求基类名`}
+                name="request"
+                initialValue={requestConfig.request}
                 rules={[{ required: true, message: '请输入请求基类名' }]}
             >
                 <Input placeholder="请输入请求基类名" />
@@ -77,37 +75,68 @@ function RequestConfig(props: RequestConfigProps) {
 }
 
 const App: React.FC = () => {
-    const vm = React.useMemo(() => new OptionsSettingsVM(), []);
     const [doudianForm] = Form.useForm();
     const [weixinForm] = Form.useForm();
     const [aliapyForm] = Form.useForm();
     const [alibabaForm] = Form.useForm();
     const [kuaishouForm] = Form.useForm();
     const [taobaoForm] = Form.useForm();
+    const platformForms: Array<[Platform, FormInstance]> = [
+        [Platform.DOUDIAN, doudianForm],
+        [Platform.WEIXIN, weixinForm],
+        [Platform.ALIPAY, aliapyForm],
+        [Platform.ALIBABA, alibabaForm],
+        [Platform.KUAISHOU, kuaishouForm],
+        [Platform.TAOBAO, taobaoForm],
+    ];
+    const vm = React.useMemo(() => new OptionsSettingsVM(), []);
 
     const [messageApi, contextHolder] = message.useMessage();
+
+    const handleValidate = React.useCallback(
+        async (form: FormInstance, content: string): Promise<boolean> => {
+            try {
+                await form.validateFields();
+                return true;
+            } catch (error) {
+                printer.consoleError(error);
+                messageApi.open({
+                    type: 'error',
+                    content,
+                });
+                return false;
+            }
+        },
+        [messageApi],
+    );
+
     const handleChangePlatform = React.useCallback(
-        (e: RadioChangeEvent) => {
-            const { value } = e.target;
-            // eslint-disable-next-line unicorn/prefer-switch
-            if (vm.platform === Platform.DOUDIAN) doudianForm.submit();
-            if (vm.platform === Platform.WEIXIN) weixinForm.submit();
-            if (vm.platform === Platform.ALIPAY) aliapyForm.submit();
-            if (vm.platform === Platform.ALIBABA) alibabaForm.submit();
-            if (vm.platform === Platform.KUAISHOU) kuaishouForm.submit();
-            if (vm.platform === Platform.TAOBAO) taobaoForm.submit();
+        async (value: Platform) => {
+            const currItem = platformForms.find((item) => item[0] === vm.platform);
+            if (currItem && currItem.length === 2) {
+                const [platform, form] = currItem;
+                vm.handleModelConfig(platform, form.getFieldsValue());
+                const res = await handleValidate(form, '请先修正错误后再切换平台');
+                if (!res) {
+                    return;
+                }
+            }
             vm.onChangePlatform(value);
         },
-        [vm, doudianForm, weixinForm, aliapyForm, alibabaForm, kuaishouForm, taobaoForm],
+        [vm, platformForms, handleValidate],
     );
     const handleSubmit = React.useCallback(
-        (values: Record<string, any>) => {
-            doudianForm.submit();
-            weixinForm.submit();
-            aliapyForm.submit();
-            alibabaForm.submit();
-            kuaishouForm.submit();
-            taobaoForm.submit();
+        async (values: Record<string, any>) => {
+            vm.toggleSubmitting(true);
+            for (const currItem of platformForms) {
+                const [platform, form] = currItem;
+                vm.handleModelConfig(platform, form.getFieldsValue());
+                const res = await handleValidate(form, '请先修正错误再保存');
+                if (!res) {
+                    vm.toggleSubmitting(false);
+                    return;
+                }
+            }
 
             vm.handleSubmit(values);
             messageApi.open({
@@ -115,7 +144,7 @@ const App: React.FC = () => {
                 content: '保存成功',
             });
         },
-        [vm, doudianForm, weixinForm, aliapyForm, aliapyForm, kuaishouForm, taobaoForm],
+        [vm, platformForms, messageApi, handleValidate],
     );
 
     return (
@@ -194,27 +223,19 @@ const App: React.FC = () => {
                                 ]}
                             />
                         </Form.Item>
-                        <Form.Item label="开放平台">
-                            <Radio.Group onChange={handleChangePlatform} value={vm.platform}>
-                                <Radio value={Platform.DOUDIAN}>
-                                    {PlatformNames[Platform.DOUDIAN]}
-                                </Radio>
-                                <Radio value={Platform.WEIXIN}>
-                                    {PlatformNames[Platform.WEIXIN]}
-                                </Radio>
-                                <Radio value={Platform.ALIPAY}>
-                                    {PlatformNames[Platform.ALIPAY]}
-                                </Radio>
-                                <Radio value={Platform.ALIBABA}>
-                                    {PlatformNames[Platform.ALIBABA]}
-                                </Radio>
-                                <Radio value={Platform.KUAISHOU}>
-                                    {PlatformNames[Platform.KUAISHOU]}
-                                </Radio>
-                                <Radio value={Platform.TAOBAO}>
-                                    {PlatformNames[Platform.TAOBAO]}
-                                </Radio>
-                            </Radio.Group>
+                        <Form.Item label="开放平台" name="platform" initialValue={vm.platform}>
+                            <Select
+                                value={vm.platform}
+                                style={{ width: 120 }}
+                                onChange={handleChangePlatform}
+                                options={platformForms.map((item) => {
+                                    const [platform, _] = item;
+                                    return {
+                                        value: platform,
+                                        label: PlatformNames[platform],
+                                    };
+                                })}
+                            />
                         </Form.Item>
                         <Form.Item label="" wrapperCol={{ offset: 8 }}>
                             <Typography.Text>
@@ -222,67 +243,31 @@ const App: React.FC = () => {
                                 <Typography.Text strong>
                                     {PlatformNames[vm.platform]}
                                 </Typography.Text>
-                                平台生效，其它平台请切换后进行配置
+                                平台生效，其它
+                                {platformForms
+                                    .filter((item) => item[0] !== vm.platform)
+                                    .map((item) => PlatformNames[item[0]])
+                                    .join('、')}
+                                平台请切换后进行配置
                             </Typography.Text>
                         </Form.Item>
-
-                        {Platform.DOUDIAN === vm.platform && (
-                            <RequestConfig
-                                form={doudianForm}
-                                requestConfig={vm.modelConfig[Platform.DOUDIAN]}
-                                onFinish={(values: IRequestConfig) =>
-                                    vm.handleModelConfig(Platform.DOUDIAN, values)
-                                }
-                            />
-                        )}
-                        {Platform.WEIXIN === vm.platform && (
-                            <RequestConfig
-                                form={weixinForm}
-                                requestConfig={vm.modelConfig[Platform.WEIXIN]}
-                                onFinish={(values: IRequestConfig) =>
-                                    vm.handleModelConfig(Platform.WEIXIN, values)
-                                }
-                            />
-                        )}
-                        {Platform.ALIPAY === vm.platform && (
-                            <RequestConfig
-                                form={aliapyForm}
-                                requestConfig={vm.modelConfig[Platform.ALIPAY]}
-                                onFinish={(values: IRequestConfig) =>
-                                    vm.handleModelConfig(Platform.ALIPAY, values)
-                                }
-                            />
-                        )}
-                        {Platform.ALIBABA === vm.platform && (
-                            <RequestConfig
-                                form={alibabaForm}
-                                requestConfig={vm.modelConfig[Platform.ALIBABA]}
-                                onFinish={(values: IRequestConfig) =>
-                                    vm.handleModelConfig(Platform.ALIBABA, values)
-                                }
-                            />
-                        )}
-                        {Platform.KUAISHOU === vm.platform && (
-                            <RequestConfig
-                                form={kuaishouForm}
-                                requestConfig={vm.modelConfig[Platform.KUAISHOU]}
-                                onFinish={(values: IRequestConfig) =>
-                                    vm.handleModelConfig(Platform.KUAISHOU, values)
-                                }
-                            />
-                        )}
-                        {Platform.TAOBAO === vm.platform && (
-                            <RequestConfig
-                                form={taobaoForm}
-                                requestConfig={vm.modelConfig[Platform.TAOBAO]}
-                                onFinish={(values: IRequestConfig) =>
-                                    vm.handleModelConfig(Platform.TAOBAO, values)
-                                }
-                            />
-                        )}
-                        <Form.Item wrapperCol={{ offset: 6, span: 16 }}>
+                        {platformForms.map((item) => {
+                            const [platform, form] = item;
+                            if (!vm.modelConfig || vm.platform !== platform) {
+                                return null;
+                            }
+                            return (
+                                <RequestConfig
+                                    key={platform}
+                                    platform={platform}
+                                    form={form}
+                                    requestConfig={vm.modelConfig[platform]}
+                                />
+                            );
+                        })}
+                        <Form.Item wrapperCol={{ offset: 8 }}>
                             {contextHolder}
-                            <Button type="primary" htmlType="submit">
+                            <Button type="primary" htmlType="submit" disabled={vm.submitting}>
                                 保存
                             </Button>
                         </Form.Item>

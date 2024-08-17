@@ -106,7 +106,7 @@ export function generate(
 
     if (requestData.methodName && requestData.requestName && params.length > 0) {
         rawCodes.push(
-            `class ${requestData.methodName}Request(${config.modelConfig[platform].requestBaseType}):`,
+            `class ${requestData.methodName}Request(${config.modelConfig[platform].request}):`,
             `    method: str = "${requestData.requestName}"`,
             `    param: ${params[params.length - 1].className}`,
             '    ',

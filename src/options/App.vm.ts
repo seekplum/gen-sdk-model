@@ -19,6 +19,9 @@ class OptionsSettingsVM {
     initialized = false;
 
     @observable
+    submitting = false;
+
+    @observable
     platform = Platform.DOUDIAN;
 
     @observable
@@ -26,6 +29,11 @@ class OptionsSettingsVM {
 
     @observable
     modelConfig: IModelConfig | null = null;
+
+    @action
+    toggleSubmitting = (submitting: boolean): void => {
+        this.submitting = submitting;
+    };
 
     @action
     fetchConfig = async (): Promise<void> => {
@@ -43,21 +51,23 @@ class OptionsSettingsVM {
     };
 
     @action
-    saveConfig = () => {
+    saveConfig = async () => {
         if (!this.config || !this.modelConfig) {
             return;
         }
         const newConfig = { ...this.config, modelConfig: this.modelConfig };
-        Extension.setConfig(newConfig);
+        await Extension.setConfig(newConfig);
     };
 
     @action
-    handleSubmit = (values: Record<string, any>): void => {
+    handleSubmit = async (values: Record<string, any>): Promise<void> => {
         if (!this.config || !this.modelConfig || !values || Object.keys(values).length === 0) {
+            this.toggleSubmitting(false);
             return;
         }
         this.config = { ...this.config, modelConfig: this.modelConfig, ...values };
-        this.saveConfig();
+        await this.saveConfig();
+        this.toggleSubmitting(false);
     };
 
     @action

@@ -6,52 +6,13 @@ import {
   Platform,
   REQUEST_PLATFORM_MAP,
 } from '@/constants';
-import type { IExtensionConfig, IRequestConfig } from '@/typings';
+import type { IExtensionConfig } from '@/typings';
 
 import pkg from '../../package.json';
 
 export const VERSION = pkg.version;
 
 export const defaultLanguage = Language.PYTHON;
-
-export const defaultDoudianRequestConfig = {
-    childBaseType: REQUEST_PLATFORM_MAP[Platform.DOUDIAN].child,
-    paramBaseType: REQUEST_PLATFORM_MAP[Platform.DOUDIAN].param,
-    responseBaseType: REQUEST_PLATFORM_MAP[Platform.DOUDIAN].response,
-    requestBaseType: REQUEST_PLATFORM_MAP[Platform.DOUDIAN].request,
-} as IRequestConfig;
-
-export const defaultWeixinRequestConfig = {
-    childBaseType: REQUEST_PLATFORM_MAP[Platform.WEIXIN].child,
-    paramBaseType: REQUEST_PLATFORM_MAP[Platform.WEIXIN].param,
-    responseBaseType: REQUEST_PLATFORM_MAP[Platform.WEIXIN].response,
-    requestBaseType: REQUEST_PLATFORM_MAP[Platform.WEIXIN].request,
-} as IRequestConfig;
-
-export const defaultAlipayRequestConfig = {
-    childBaseType: REQUEST_PLATFORM_MAP[Platform.ALIPAY].child,
-    paramBaseType: REQUEST_PLATFORM_MAP[Platform.ALIPAY].param,
-    responseBaseType: REQUEST_PLATFORM_MAP[Platform.ALIPAY].response,
-    requestBaseType: REQUEST_PLATFORM_MAP[Platform.ALIPAY].request,
-} as IRequestConfig;
-export const defaultAlibabaRequestConfig = {
-    childBaseType: REQUEST_PLATFORM_MAP[Platform.ALIBABA].child,
-    paramBaseType: REQUEST_PLATFORM_MAP[Platform.ALIBABA].param,
-    responseBaseType: REQUEST_PLATFORM_MAP[Platform.ALIBABA].response,
-    requestBaseType: REQUEST_PLATFORM_MAP[Platform.ALIBABA].request,
-} as IRequestConfig;
-export const defaultKuaishouRequestConfig = {
-    childBaseType: REQUEST_PLATFORM_MAP[Platform.KUAISHOU].child,
-    paramBaseType: REQUEST_PLATFORM_MAP[Platform.KUAISHOU].param,
-    responseBaseType: REQUEST_PLATFORM_MAP[Platform.KUAISHOU].response,
-    requestBaseType: REQUEST_PLATFORM_MAP[Platform.KUAISHOU].request,
-} as IRequestConfig;
-export const defaultTaobaoRequestConfig = {
-    childBaseType: REQUEST_PLATFORM_MAP[Platform.TAOBAO].child,
-    paramBaseType: REQUEST_PLATFORM_MAP[Platform.TAOBAO].param,
-    responseBaseType: REQUEST_PLATFORM_MAP[Platform.TAOBAO].response,
-    requestBaseType: REQUEST_PLATFORM_MAP[Platform.TAOBAO].request,
-} as IRequestConfig;
 
 export const defaultExtensionConfig = {
     isExpanded: true,
@@ -64,12 +25,12 @@ export const defaultExtensionConfig = {
     language: defaultLanguage,
 
     modelConfig: {
-        [Platform.DOUDIAN]: defaultDoudianRequestConfig,
-        [Platform.WEIXIN]: defaultWeixinRequestConfig,
-        [Platform.ALIPAY]: defaultAlipayRequestConfig,
-        [Platform.ALIBABA]: defaultAlibabaRequestConfig,
-        [Platform.KUAISHOU]: defaultAlibabaRequestConfig,
-        [Platform.TAOBAO]: defaultTaobaoRequestConfig,
+        [Platform.DOUDIAN]: REQUEST_PLATFORM_MAP[Platform.DOUDIAN],
+        [Platform.WEIXIN]: REQUEST_PLATFORM_MAP[Platform.WEIXIN],
+        [Platform.ALIPAY]: REQUEST_PLATFORM_MAP[Platform.ALIPAY],
+        [Platform.ALIBABA]: REQUEST_PLATFORM_MAP[Platform.ALIBABA],
+        [Platform.KUAISHOU]: REQUEST_PLATFORM_MAP[Platform.KUAISHOU],
+        [Platform.TAOBAO]: REQUEST_PLATFORM_MAP[Platform.TAOBAO],
     },
 } as IExtensionConfig;
 

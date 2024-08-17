@@ -9,13 +9,13 @@ export function getParentModelName(
     const requestConfig = config.modelConfig[platform];
     switch (modelType) {
         case ModelTypes.PARAM:
-            return requestConfig.paramBaseType;
+            return requestConfig.param;
         case ModelTypes.RESPONSE:
-            return requestConfig.responseBaseType;
+            return requestConfig.response;
         case ModelTypes.REQUEST:
-            return requestConfig.requestBaseType;
+            return requestConfig.request;
         case ModelTypes.CHILD:
-            return requestConfig.childBaseType;
+            return requestConfig.child;
         default:
             throw new Error(
                 `Unsupported parent model type: ${modelType} for platform: ${platform}`,

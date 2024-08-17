@@ -1,19 +1,12 @@
-import type { Language, Platform } from '@/constants';
-
-export interface IRequestConfig {
-    childBaseType: string;
-    paramBaseType: string;
-    responseBaseType: string;
-    requestBaseType: string;
-}
+import type { BaseModel, Language, Platform } from '@/constants';
 
 export interface IModelConfig {
-    [Platform.DOUDIAN]: IRequestConfig;
-    [Platform.WEIXIN]: IRequestConfig;
-    [Platform.ALIPAY]: IRequestConfig;
-    [Platform.ALIBABA]: IRequestConfig;
-    [Platform.KUAISHOU]: IRequestConfig;
-    [Platform.TAOBAO]: IRequestConfig;
+    [Platform.DOUDIAN]: BaseModel;
+    [Platform.WEIXIN]: BaseModel;
+    [Platform.ALIPAY]: BaseModel;
+    [Platform.ALIBABA]: BaseModel;
+    [Platform.KUAISHOU]: BaseModel;
+    [Platform.TAOBAO]: BaseModel;
 }
 
 export interface IExtensionConfig {
