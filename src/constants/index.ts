@@ -40,6 +40,7 @@ export enum VariableTypes {
     FLOAT = 'float',
     BOOL = 'bool',
     OBJECT = 'object',
+    DICT = 'dict',
     LIST = 'list',
     DATE = 'datetime',
 }

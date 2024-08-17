@@ -20,10 +20,15 @@ interface RequestResponse extends IParam {}
 
 const TYPE_MAP = {
     Long: VariableTypes.INT,
+    long: VariableTypes.INT,
     Integer: VariableTypes.INT,
     String: VariableTypes.STRING,
+    boolean: VariableTypes.BOOL,
     Boolean: VariableTypes.BOOL,
+    List: VariableTypes.LIST,
     Double: VariableTypes.FLOAT,
+    MAP: VariableTypes.DICT,
+    Map: VariableTypes.DICT,
     Date: VariableTypes.DATE,
 } as Record<string, string>;
 
@@ -31,16 +36,30 @@ function isModel(param: IParam): boolean {
     return param.complexTypeFlag;
 }
 
+function isList(param: IParam): boolean {
+    return param.type.includes('[]') || param.type.includes('List');
+}
+
+function isListModel(param: IParam): boolean {
+    const tmpName = utils.parseArrayName(param.type);
+    return isList(param) && !TYPE_MAP[tmpName] && tmpName !== 'List';
+}
+
 function parseType(param: IParam): [string, string | null] {
-    if (param.type.includes('[]')) {
-        const type = utils.parseObjectName(utils.parseArrayName(param.type));
-        return [VariableTypes.LIST, TYPE_MAP[type] || type];
+    const originType = utils.parseObjectName(utils.parseArrayName(param.type));
+    const tmpType = utils.parseParentPathName(originType);
+
+    if (tmpType === 'list') {
+        return [VariableTypes.LIST, null];
+    }
+    if (isList(param)) {
+        return [VariableTypes.LIST, TYPE_MAP[tmpType] || originType];
     }
     if (isModel(param)) {
         return [utils.parseObjectName(param.type), null];
     }
 
-    return [TYPE_MAP[param.type], null];
+    return [TYPE_MAP[tmpType] || originType, null];
 }
 
 function buildParams(
@@ -48,16 +67,29 @@ function buildParams(
     param: IParam,
     models: [string, ModelTypes, IParam[]][],
 ): void {
-    if (isModel(param)) {
-        for (const c of param.children || []) {
-            buildParams(modelType, c, models);
+    if (!isModel(param) && !isListModel(param)) {
+        return;
+    }
+
+    const [typeName, childType] = parseType(param);
+    const pathName = utils.buildParentPathName(
+        childType || typeName,
+        utils.parseObjectName(param.name),
+    );
+    for (const c of param.children || []) {
+        if (isModel(c) || isListModel(c)) {
+            const [childTypeName, childChildType] = parseType(c);
+            c.type = utils.buildParentPathName(
+                childChildType || childTypeName,
+                pathName,
+                utils.parseObjectName(c.name),
+            );
         }
+        buildParams(modelType, c, models);
+    }
+    if (!(typeName === VariableTypes.LIST && (!childType || childType === VariableTypes.DICT))) {
         const childParams = param.children || [];
-        models.push([
-            utils.parseObjectName(utils.parseArrayName(param.type)),
-            modelType,
-            childParams,
-        ]);
+        models.push([pathName, modelType, childParams]);
     }
 }
 
@@ -132,7 +164,7 @@ export function generate(response: string): RequestTypes.RequestData {
             comments: ['解析请求名称失败'],
         } as RequestTypes.RequestData;
     }
-    const methodName = utils.snake2pascal(requestName);
+    const methodName = utils.parseObjectName(utils.snake2pascal(requestName));
     const requestParamList = result.apiAppParamVOList;
     const responseParamList = result.apiReturnParamVOList;
     return genModels([location.href], requestName, methodName, requestParamList, responseParamList);

@@ -42,11 +42,15 @@ const TYPE_MAP = {
 } as Record<number, string>;
 
 function isModel(param: IParam): boolean {
-    return (
-        !!param.children &&
-        (TYPE_MAP[param.type] === VariableTypes.LIST ||
-            TYPE_MAP[param.type] === VariableTypes.OBJECT)
-    );
+    return !!param.children && TYPE_MAP[param.type] === VariableTypes.OBJECT;
+}
+
+function isList(param: IParam): boolean {
+    return !!param.children && TYPE_MAP[param.type] === VariableTypes.LIST;
+}
+
+function isListModel(param: IParam): boolean {
+    return isList(param) && !!param.subType && !TYPE_MAP[param.subType];
 }
 
 function isRequired(param: IParam) {
@@ -84,17 +88,40 @@ function parseType(param: IParam): [string, string | null] {
 }
 
 function buildParams(
+    rootType: ModelTypes,
     modelType: ModelTypes,
     param: IParam,
     models: [string, ModelTypes, IParam[]][],
 ): void {
-    if (isModel(param)) {
-        for (const c of param.children || []) {
-            buildParams(modelType, c, models);
-        }
-        const childParams = param.children || [];
-        models.push([utils.snake2pascal(parseName(param)), modelType, childParams]);
+    if (!isModel(param) && !isListModel(param)) {
+        return;
     }
+    const [typeName, childType] = parseType(param);
+
+    const pathName = utils.buildParentPathName(
+        utils.parseObjectName(utils.parseArrayName(childType || typeName)),
+        utils.snake2pascal(parseName(param)),
+    );
+    for (const c of param.children || []) {
+        const isSubModel = isListModel(c);
+        if (!isModel(c) && !isSubModel) {
+            continue;
+        }
+        const [childTypeName, childChildType] = parseType(c);
+        c.type = isSubModel ? 3 : 5;
+        c.subType = isSubModel ? 5 : undefined;
+        if (rootType === ModelTypes.PARAM) {
+            c.requestName = utils.buildParentPathName(
+                childChildType || childTypeName,
+                utils.snake2pascal(parseName(c)),
+            );
+        } else {
+            c.responseName = pathName;
+        }
+        buildParams(rootType, modelType, c, models);
+    }
+    const childParams = param.children || [];
+    models.push([pathName, modelType, childParams]);
 }
 
 function buildModels(
@@ -104,7 +131,7 @@ function buildModels(
 ): [string, ModelTypes, IParam[]][] {
     const models: [string, ModelTypes, IParam[]][] = [];
     for (const param of params) {
-        buildParams(ModelTypes.CHILD, param, models);
+        buildParams(modelType, ModelTypes.CHILD, param, models);
     }
     models.push([baseClassName, modelType, params]);
     return models;

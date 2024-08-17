@@ -32,6 +32,14 @@ function isModel(param: IParam): boolean {
     return !!param.children && param.value.fieldType === 'COMPLEXTYPE';
 }
 
+function isList(param: IParam): boolean {
+    return param.value.listType;
+}
+
+function isListModel(param: IParam): boolean {
+    return isList(param) && !TYPE_MAP[param.value.exactType];
+}
+
 function parseType(param: IParam): [string, string | null] {
     if (param.value.listType) {
         return [VariableTypes.LIST, TYPE_MAP[param.value.exactType] || param.value.exactType];
@@ -48,13 +56,22 @@ function buildParams(
     param: IParam,
     models: [string, ModelTypes, IParam[]][],
 ): void {
-    if (isModel(param)) {
-        for (const c of param.children || []) {
-            buildParams(modelType, c, models);
-        }
-        const childParams = param.children || [];
-        models.push([param.value.exactType, modelType, childParams]);
+    if (!isModel(param) && !isListModel(param)) {
+        return;
     }
+    const pathName = utils.buildParentPathName(param.value.exactType, param.value.fieldName);
+    for (const c of param.children || []) {
+        if (isModel(c) || isListModel(c)) {
+            c.value.exactType = utils.buildParentPathName(
+                c.value.exactType,
+                pathName,
+                c.value.fieldName,
+            );
+        }
+        buildParams(modelType, c, models);
+    }
+    const childParams = param.children || [];
+    models.push([pathName, modelType, childParams]);
 }
 
 function buildModels(

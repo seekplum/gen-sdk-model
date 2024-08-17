@@ -32,8 +32,16 @@ function isModel(param: IParam): boolean {
     return !!param.structureId;
 }
 
+function isList(param: IParam): boolean {
+    return param.paramType.includes('[]') || param.paramType.includes('List');
+}
+
+function isListModel(param: IParam): boolean {
+    return isList(param) && !TYPE_MAP[param.paramType];
+}
+
 function parseType(param: IParam): [string, string | null] {
-    if (param.paramType.includes('[]') || param.paramType.includes('List')) {
+    if (isList(param)) {
         const type = utils.parseArrayName(param.paramType);
         return [VariableTypes.LIST, TYPE_MAP[type] || type];
     }
@@ -49,16 +57,26 @@ function buildParams(
     param: IParam,
     models: [string, ModelTypes, IParam[]][],
 ): void {
-    if (isModel(param)) {
-        for (const c of param.children || []) {
-            buildParams(modelType, c, models);
+    if (!isModel(param) && !isListModel(param)) {
+        return;
+    }
+    const pathName = utils.buildParentPathName(
+        utils.parseObjectName(utils.parseArrayName(param.paramType)),
+        param.paramName,
+    );
+    for (const c of param.children || []) {
+        if (!TYPE_MAP[utils.parseArrayName(c.paramType)]) {
+            c.paramType = utils.buildParentPathName(
+                utils.parseObjectName(utils.parseArrayName(c.paramType)),
+                pathName,
+                c.paramName,
+            );
         }
+        buildParams(modelType, c, models);
+    }
+    if (isModel(param)) {
         const childParams = param.children || [];
-        models.push([
-            utils.parseObjectName(utils.parseArrayName(param.paramType)),
-            modelType,
-            childParams,
-        ]);
+        models.push([pathName, modelType, childParams]);
     }
 }
 

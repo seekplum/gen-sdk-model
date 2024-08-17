@@ -1,3 +1,5 @@
+import * as CryptoJS from 'crypto-js';
+
 import { Platform } from '@/constants';
 
 export function snake2pascal(name: string): string {
@@ -18,11 +20,20 @@ export function pascal2pathname(name: string): string {
 }
 
 export function pathname2requestName(pathname: string): string {
-    return pathname.replaceAll('/', '.');
+    return pathname.split('/').join('.');
 }
 
 export function parseArrayName(name: string): string {
-    return name.replace(/List|[<>[\]]/g, '');
+    if (name === 'List') {
+        return name;
+    }
+    if (name.includes('List') || name.toLowerCase().includes('array')) {
+        const match = name.match(/List<(.+)>|[Aa]rray<(.+)>/);
+        if (match) {
+            return match[1];
+        }
+    }
+    return name.replace(/[<>[\]]/g, '');
 }
 
 export function parseObjectName(name: string): string {
@@ -56,4 +67,19 @@ export function removeSpecialCharacters(value: string): string {
 
 export async function sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export function buildParentPathName(name: string, ...args: string[]): string {
+    const parentPathName = args.join('#');
+    return `${parentPathName}@${name}`;
+}
+
+export function parseParentPathName(name: string): string {
+    const values = name.split('@');
+    return values[values.length - 1];
+}
+
+export function encrypt(data: string): string {
+    const encrypted = CryptoJS.MD5(data);
+    return encrypted.toString();
 }
