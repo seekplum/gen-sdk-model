@@ -127,6 +127,11 @@ export function generate(response: string): RequestTypes.RequestData {
         } as RequestTypes.RequestData;
     }
     const { data: dataJson } = responseJson;
+    if (!dataJson) {
+        return {
+            comments: ['接口文档数据为空，请检查接口文档是否正确'],
+        } as RequestTypes.RequestData;
+    }
     const { inputParams, outputParams, name: requestName } = dataJson;
 
     const methodName = utils.snake2pascal(requestName);

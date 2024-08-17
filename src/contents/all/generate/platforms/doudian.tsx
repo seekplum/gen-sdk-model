@@ -162,6 +162,11 @@ export function generate(response: string): RequestTypes.RequestData {
             comments: ['请求失败，未正常返回接口文档数据'],
         } as RequestTypes.RequestData;
     }
+    if (!responseJson.data) {
+        return {
+            comments: ['接口文档数据为空，请检查接口文档是否正确'],
+        } as RequestTypes.RequestData;
+    }
     const pathname = responseJson.data.article.info.title;
     const methodName = utils.snake2pascal(pathname);
     const requestName = utils.pathname2requestName(pathname);
