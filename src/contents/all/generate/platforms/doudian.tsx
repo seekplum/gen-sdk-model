@@ -12,6 +12,8 @@ interface IParam {
     responseName?: string;
     mustNeed?: boolean;
     children?: IParam[];
+
+    customType?: string;
 }
 
 interface RequestParam extends IParam {
@@ -36,7 +38,7 @@ const TYPE_MAP = {
     4: VariableTypes.BOOL,
     5: VariableTypes.OBJECT,
     7: VariableTypes.INT,
-    8: VariableTypes.OBJECT,
+    8: VariableTypes.DICT,
     9: VariableTypes.FLOAT,
     99: VariableTypes.INT,
 } as Record<number, string>;
@@ -50,7 +52,7 @@ function isList(param: IParam): boolean {
 }
 
 function isListModel(param: IParam): boolean {
-    return isList(param) && !!param.subType && !TYPE_MAP[param.subType];
+    return isList(param) && !!param.subType && TYPE_MAP[param.subType] === VariableTypes.OBJECT;
 }
 
 function isRequired(param: IParam) {
@@ -76,15 +78,22 @@ function parseName(param: IParam): string {
 }
 
 function parseType(param: IParam): [string, string | null] {
-    const originType = TYPE_MAP[param.type];
-    let typeName = isModel(param) ? utils.snake2pascal(parseName(param)) : originType;
-    let childType = null;
-    if (originType === VariableTypes.LIST) {
-        const originChildType = param.subType ? TYPE_MAP[param.subType] : null;
-        childType = originChildType === VariableTypes.OBJECT ? typeName : originChildType;
-        typeName = originType;
+    if (isListModel(param)) {
+        const originChildType =
+            param.customType || (param.subType ? TYPE_MAP[param.subType] : null);
+        const childType =
+            originChildType === VariableTypes.OBJECT
+                ? utils.snake2pascal(parseName(param))
+                : originChildType;
+        return [VariableTypes.LIST, childType];
     }
-    return [typeName, childType];
+    if (isList(param)) {
+        return [VariableTypes.LIST, null];
+    }
+    if (isModel(param)) {
+        return [param.customType || utils.snake2pascal(parseName(param)), null];
+    }
+    return [TYPE_MAP[param.type], param.subType ? TYPE_MAP[param.subType] : null];
 }
 
 function buildParams(
@@ -100,24 +109,18 @@ function buildParams(
 
     const pathName = utils.buildParentPathName(
         utils.parseObjectName(utils.parseArrayName(childType || typeName)),
-        utils.snake2pascal(parseName(param)),
+        parseName(param),
     );
     for (const c of param.children || []) {
-        const isSubModel = isListModel(c);
-        if (!isModel(c) && !isSubModel) {
+        if (!isModel(c) && !isListModel(c)) {
             continue;
         }
         const [childTypeName, childChildType] = parseType(c);
-        c.type = isSubModel ? 3 : 5;
-        c.subType = isSubModel ? 5 : undefined;
-        if (rootType === ModelTypes.PARAM) {
-            c.requestName = utils.buildParentPathName(
-                childChildType || childTypeName,
-                utils.snake2pascal(parseName(c)),
-            );
-        } else {
-            c.responseName = pathName;
-        }
+        c.customType = utils.buildParentPathName(
+            childChildType || childTypeName,
+            pathName,
+            parseName(c),
+        );
         buildParams(rootType, modelType, c, models);
     }
     const childParams = param.children || [];

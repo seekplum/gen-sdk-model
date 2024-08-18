@@ -42,24 +42,23 @@ function isList(param: IParam): boolean {
 
 function isListModel(param: IParam): boolean {
     const tmpName = utils.parseArrayName(param.type);
-    return isList(param) && !TYPE_MAP[tmpName] && tmpName !== 'List';
+    return isList(param) && !TYPE_MAP[tmpName] && tmpName.toLowerCase() !== 'list';
 }
 
 function parseType(param: IParam): [string, string | null] {
     const originType = utils.parseObjectName(utils.parseArrayName(param.type));
-    const tmpType = utils.parseParentPathName(originType);
 
-    if (tmpType === 'list') {
+    if (originType.toLowerCase() === 'list') {
         return [VariableTypes.LIST, null];
     }
     if (isList(param)) {
-        return [VariableTypes.LIST, TYPE_MAP[tmpType] || originType];
+        return [VariableTypes.LIST, TYPE_MAP[originType] || originType];
     }
     if (isModel(param)) {
         return [utils.parseObjectName(param.type), null];
     }
 
-    return [TYPE_MAP[tmpType] || originType, null];
+    return [TYPE_MAP[originType] || originType, null];
 }
 
 function buildParams(

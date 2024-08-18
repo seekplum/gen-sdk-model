@@ -20,15 +20,19 @@ export function pascal2pathname(name: string): string {
 }
 
 export function pathname2requestName(pathname: string): string {
-    return pathname.split('/').join('.');
+    return pathname
+        .split('/')
+        .filter((v) => !!v)
+        .join('.');
 }
 
 export function parseArrayName(name: string): string {
-    if (name === 'List') {
-        return name;
+    const tmpName = parseObjectName(name);
+    if (tmpName.toLowerCase() === 'list') {
+        return tmpName;
     }
     if (name.includes('List') || name.toLowerCase().includes('array')) {
-        const match = name.match(/List<(.+)>|[Aa]rray<(.+)>/);
+        const match = name.match(/[Ll]ist<(.+)>|[Aa]rray<(.+)>/);
         if (match) {
             return match[1];
         }

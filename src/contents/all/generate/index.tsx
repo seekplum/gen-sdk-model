@@ -30,7 +30,7 @@ function generateCodes(
 }
 
 function getParamKey(param: RequestTypes.RequestModel): string {
-    const res = [utils.parseParentPathName(param.className)];
+    const res = [utils.parseParentPathName(utils.parseObjectName(param.className))];
     for (const childParam of param.childParams) {
         res.push(
             childParam.name,
@@ -95,10 +95,6 @@ function removeDuplicates(
             duplicateModels[originName] = [param];
         }
     }
-    // 所有都未重复
-    if (Object.values(duplicateModels).every((v) => v.length > 1)) {
-        return [params, responses];
-    }
     const someKeys = new Set<string>(); // 属性名一致的key
     const keyNamePairs: Record<string, string> = {}; // 类名和key的映射
     const keyNumPairs: Record<string, number> = {}; // 重名后的key和数量的映射
@@ -110,16 +106,22 @@ function removeDuplicates(
         }
         const models = duplicateModels[originName];
         for (const model of models) {
-            const key = utils.encrypt(getParamKey(model));
+            // 完全重复的model，不需要处理
+            if (keyNamePairs[model.className] === originName) {
+                continue;
+            }
             keyNamePairs[model.className] = originName;
             let dupNum = keyNumPairs[originName] || 0;
+            const key = utils.encrypt(getParamKey(model));
             // 重复后才需要记录重名数量
-            if (!someKeys.has(key) && model.className !== originName) {
-                dupNum += 1;
+            if (someKeys.has(key)) {
                 deleteClassNames.add(model.className);
+            } else {
+                dupNum += 1;
             }
             someKeys.add(key);
             keyNumPairs[originName] = dupNum;
+            // 首个重名类不加后缀，其余重名类加后缀
             if (dupNum > 1) {
                 keyNamePairs[model.className] = `${originName}${dupNum}`;
             }
@@ -181,8 +183,17 @@ export function generateByDocument(
     if (platform === Platform.WEIXIN) {
         requestData = generateWeixin();
     }
-    if (!requestData) {
-        throw new Error(`Unsupported platform: ${platform}`);
+    if (requestData) {
+        const [params, responses] = removeDuplicates(
+            requestData.params || [],
+            requestData.responses || [],
+        );
+        requestData.params = params;
+        requestData.responses = responses;
+    } else {
+        requestData = {
+            comments: [`Unsupported platform: ${platform}`],
+        } as RequestTypes.RequestData;
     }
     return generateCodes(platform, language, requestData, config);
 }

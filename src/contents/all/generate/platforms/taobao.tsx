@@ -33,8 +33,17 @@ function isModel(param: IParam): boolean {
     return !!param.subParams && param.subParams.length > 0;
 }
 
+function isList(param: IParam): boolean {
+    return param.type.includes('[]') || param.type.includes('List');
+}
+
+function isListModel(param: IParam): boolean {
+    const tmpName = utils.parseArrayName(param.type);
+    return isList(param) && !TYPE_MAP[tmpName] && tmpName.toLowerCase() !== 'list';
+}
+
 function parseType(param: IParam): [string, string | null] {
-    if (param.type.includes('[]') || param.type.includes('List')) {
+    if (isList(param)) {
         const type = utils.parseArrayName(param.type);
         return [VariableTypes.LIST, TYPE_MAP[type] || type];
     }
@@ -50,17 +59,27 @@ function buildParams(
     param: IParam,
     models: [string, ModelTypes, IParam[]][],
 ): void {
-    if (isModel(param)) {
-        for (const c of param.subParams || []) {
-            buildParams(modelType, c, models);
-        }
-        const childParams = param.subParams || [];
-        models.push([
-            utils.parseObjectName(utils.parseArrayName(param.type)),
-            modelType,
-            childParams,
-        ]);
+    if (!isModel(param) && !isListModel(param)) {
+        return;
     }
+    const pathName = utils.buildParentPathName(param.type, param.name);
+    for (const c of param.subParams || []) {
+        if (!isModel(c) && !isListModel(c)) {
+            continue;
+        }
+
+        c.type = utils.buildParentPathName(c.type, pathName, c.name);
+        buildParams(modelType, c, models);
+    }
+    const childParams = param.subParams || [];
+    models.push([
+        utils.buildParentPathName(
+            utils.parseObjectName(utils.parseArrayName(param.type)),
+            pathName,
+        ),
+        modelType,
+        childParams,
+    ]);
 }
 
 function buildModels(

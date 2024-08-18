@@ -123,7 +123,6 @@ function removeChildren(children: IParam[]) {
         if (!child) {
             continue;
         }
-        // res.push(...child.children);
         child.children = [];
     }
     return children;
@@ -150,17 +149,26 @@ function buildParams(
             childParamsArrays.push(...childParam.children);
         }
     }
-    const exitsNames = new Set();
     for (let i = childrenArrays.length - 1; i >= 0; i--) {
         const child = childrenArrays[i];
+
+        const pathName = utils.buildParentPathName(className, child.name);
         const childClassName = utils.snake2pascal(child.name);
-        if (exitsNames.has(childClassName)) {
-            continue;
-        }
         const childrenParams = removeChildren(child.children);
-        exitsNames.add(childClassName);
+        for (const childParam of childrenParams) {
+            const pathName2 = utils.buildParentPathName(childParam.type, pathName, childParam.name);
+            for (const c of childParam.children) {
+                const [type, childType] = parseTypeByType(c.type);
+                if (
+                    (type && type !== VariableTypes.LIST && !TYPE_MAP[type]) ||
+                    (childType && !TYPE_MAP[childType])
+                ) {
+                    c.type = utils.buildParentPathName(c.type, pathName2, c.name);
+                }
+            }
+        }
         models.push({
-            className: childClassName,
+            className: utils.buildParentPathName(childClassName, pathName),
             parentModelType: ModelTypes.CHILD,
             childParams: childrenParams,
         } as RequestTypes.RequestModel);

@@ -11,6 +11,7 @@ const VariableTypesMap: Record<string, string> = {
     [VariableTypes.BOOL]: 'boolean',
     [VariableTypes.LIST]: 'Array',
     [VariableTypes.OBJECT]: 'object',
+    [VariableTypes.DICT]: 'Record<any, any>',
     [VariableTypes.DATE]: 'Date',
 };
 
