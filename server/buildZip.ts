@@ -18,4 +18,4 @@ const extensionVersion = args?.extensionVersion || `v${pkg.version}`;
 
 const file = new AdmZip();
 file.addLocalFolder('./extension/gen-sdk-model');
-file.writeZip(`./extension/gen-sdk-model-${extensionVersion}.zip`);
+file.writeZip(`./extension/gen-sdk-model-chrome-extension-${extensionVersion}.zip`);
