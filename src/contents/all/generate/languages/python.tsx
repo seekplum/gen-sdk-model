@@ -1,6 +1,7 @@
 import { type Platform, VariableTypes } from '@/constants';
 import type { IExtensionConfig } from '@/typings';
 import type * as RequestTypes from '@/typings/request';
+import * as utils from '@/utils/utils';
 
 import { getParentModelName } from '../utils';
 
@@ -45,6 +46,11 @@ function buildFieldArgs(childParam: RequestTypes.IParam, config: IExtensionConfi
         }
     }
     const defaultVal = childParam.required ? '...' : 'default=None';
+    const snakeName = utils.pascal2snake(childParam.name);
+    if (childParam.name !== snakeName) {
+        args.push(`alias="${childParam.name}"`);
+        childParam.name = snakeName;
+    }
     return args.length > 0 ? ` = Field(${defaultVal}, ${args.join(', ')})` : '';
 }
 
