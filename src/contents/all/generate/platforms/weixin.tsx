@@ -1,5 +1,6 @@
 import { ModelTypes, VariableTypes } from '@/constants';
 import type * as RequestTypes from '@/typings/request';
+import * as printer from '@/utils/printer';
 import * as utils from '@/utils/utils';
 
 const TYPE_MAP = {
@@ -12,6 +13,7 @@ const TYPE_MAP = {
     'array[string]': VariableTypes.LIST,
     'Object': VariableTypes.OBJECT,
     'Objct': VariableTypes.OBJECT,
+    'Map': VariableTypes.DICT,
 } as Record<string, string>;
 
 interface IRequestId {
@@ -87,11 +89,19 @@ function parseArrayChildType(type: string): string {
 }
 
 function parseNameByOject(name: string): string {
-    return name.toLowerCase().replace(/object|objct|[()]/g, '');
+    return name.replace(/[Oo]bje?ct|[Aa]rray|[()]/g, '').trim();
 }
 
-function isObject(lowerType: string): boolean {
-    return lowerType.includes('object') || lowerType.includes('objct');
+function isObject(type: string): boolean {
+    if (TYPE_MAP[type] || TYPE_MAP[type.toLowerCase()]) {
+        return false;
+    }
+    const match = type.match(/[Oo]bje?ct [A-Z]\w+|[Aa]rray [A-Z]\w+|[A-Z]\w+/);
+    return !!match;
+}
+
+function isArray(type: string): boolean {
+    return type.toLowerCase().includes('[]') || type.toLowerCase().includes('array');
 }
 
 function parseTypeByType(type: string): [string, string] {
@@ -103,8 +113,8 @@ function parseTypeByType(type: string): [string, string] {
         return [VariableTypes.LIST, utils.snake2pascal(lowerType.replace('[]', ''))];
     }
 
-    if (isObject(lowerType)) {
-        return [utils.snake2pascal(parseNameByOject(lowerType)), ''];
+    if (isObject(type)) {
+        return [utils.snake2pascal(parseNameByOject(type)), ''];
     }
     return [TYPE_MAP[type] || type, ''];
 }
@@ -319,6 +329,53 @@ function getElement(elementID: string): Element | null {
     return element;
 }
 
+function fixNameId(name: string): string {
+    if (name === 'AtrrInfo') {
+        name = 'AttrInfo';
+    }
+    return name;
+}
+
+function parseByDocument(
+    prefix: string,
+    cells: string[],
+    exitsNames: Set<string>,
+    data: string[][],
+    elementID: string,
+): void {
+    const dataType = cells[1];
+    if (!(cells.length === 3 && isObject(dataType))) {
+        return;
+    }
+    const nameId = fixNameId(parseNameByOject(dataType));
+    if (exitsNames.has(nameId)) {
+        return;
+    }
+    let dataElem = getElement(nameId);
+    if (!dataElem && nameId !== nameId.toLowerCase()) {
+        dataElem = getElement(nameId.toLowerCase());
+    }
+    if (dataElem) {
+        exitsNames.add(nameId);
+        const dataRows = [...dataElem.querySelectorAll('tr')];
+        for (const dataRow of dataRows) {
+            const dataCells = [...dataRow.querySelectorAll('td')].map(
+                (cell) => cell.textContent || '',
+            );
+            if (dataCells.length === 0) {
+                continue;
+            }
+            const [name, ...extra] = dataCells;
+            const suffix = isArray(dataType) ? '[]' : '';
+            const dataName = cells[0];
+            parseByDocument(`${prefix}${dataName}.`, dataCells, exitsNames, data, elementID);
+            data.push([`${prefix}${dataName}.${name.toLowerCase()}${suffix}`, ...extra]);
+        }
+    } else {
+        throw new Error(`未找到 ${elementID} 中的 ${nameId} 数据`);
+    }
+}
+
 function getDataByDocument(elementID: string): string[][] {
     const element = getElement(elementID);
     if (!element) {
@@ -326,37 +383,14 @@ function getDataByDocument(elementID: string): string[][] {
     }
     const rows = [...element.querySelectorAll('tr')];
     const data = [];
-    const exitsNames = new Set();
+    const exitsNames = new Set<string>();
     for (const row of rows) {
         const cells = [...row.querySelectorAll('td')].map((cell) => cell.textContent || '');
         if (cells.length === 0) {
             continue;
         }
         data.push(cells);
-        const dataType = cells[1].toLowerCase();
-        if (cells.length === 3 && isObject(dataType)) {
-            const nameId = parseNameByOject(dataType);
-            if (exitsNames.has(nameId)) {
-                continue;
-            }
-            const dataElem = getElement(nameId);
-            if (dataElem) {
-                exitsNames.add(nameId);
-                const dataRows = [...dataElem.querySelectorAll('tr')];
-                for (const dataRow of dataRows) {
-                    const dataCells = [...dataRow.querySelectorAll('td')].map(
-                        (cell) => cell.textContent || '',
-                    );
-                    if (dataCells.length === 0) {
-                        continue;
-                    }
-                    const [name, ...extra] = dataCells;
-                    data.push([`${nameId}.${name}`, ...extra]);
-                }
-            } else {
-                throw new Error(`未找到 ${elementID} 中的 ${nameId} 数据`);
-            }
-        }
+        parseByDocument('', cells, exitsNames, data, elementID);
     }
     return data;
 }
@@ -402,6 +436,12 @@ export function generate(): RequestTypes.RequestData {
     }
     const methodName = utils.snake2pascal(url.pathname);
     const requestName = utils.pathname2requestName(url.pathname);
-
-    return genModels([location.href], requestName, methodName, product);
+    try {
+        return genModels([location.href], requestName, methodName, product);
+    } catch (error: any) {
+        printer.consoleError(error);
+        return {
+            comments: [error.message],
+        } as RequestTypes.RequestData;
+    }
 }
