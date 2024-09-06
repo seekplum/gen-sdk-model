@@ -11,6 +11,9 @@ interface IParam {
     required?: boolean;
     complexTypeFlag: boolean;
 
+    calcType?: string;
+    calcSubType?: string | null;
+
     children?: IParam[];
 }
 
@@ -22,6 +25,7 @@ const TYPE_MAP = {
     Long: VariableTypes.INT,
     long: VariableTypes.INT,
     Integer: VariableTypes.INT,
+    BigDecimal: VariableTypes.INT,
     String: VariableTypes.STRING,
     boolean: VariableTypes.BOOL,
     Boolean: VariableTypes.BOOL,
@@ -46,19 +50,28 @@ function isListModel(param: IParam): boolean {
 }
 
 function parseType(param: IParam): [string, string | null] {
+    if (param.calcType) {
+        return [param.calcType, param.calcSubType || null];
+    }
     const originType = utils.parseObjectName(utils.parseArrayName(param.type));
-
+    let calcType = null;
+    let calcSubType = null;
     if (originType.toLowerCase() === 'list') {
-        return [VariableTypes.LIST, null];
+        calcType = VariableTypes.LIST;
+        calcSubType = null;
+    } else if (isList(param)) {
+        calcType = VariableTypes.LIST;
+        calcSubType = TYPE_MAP[originType] || utils.toFirstUpperCase(originType);
+    } else if (isModel(param)) {
+        calcType = utils.toFirstUpperCase(utils.parseObjectName(param.type));
+        calcSubType = null;
+    } else {
+        calcType = TYPE_MAP[originType] || originType;
+        calcSubType = null;
     }
-    if (isList(param)) {
-        return [VariableTypes.LIST, TYPE_MAP[originType] || originType];
-    }
-    if (isModel(param)) {
-        return [utils.parseObjectName(param.type), null];
-    }
-
-    return [TYPE_MAP[originType] || originType, null];
+    param.calcType = calcType;
+    param.calcSubType = calcSubType;
+    return [calcType, calcSubType];
 }
 
 function buildParams(
@@ -73,7 +86,7 @@ function buildParams(
     const [typeName, childType] = parseType(param);
     const pathName = utils.buildParentPathName(
         childType || typeName,
-        utils.parseObjectName(param.name),
+        utils.toFirstUpperCase(utils.parseObjectName(param.name)),
     );
     for (const c of param.children || []) {
         if (isModel(c) || isListModel(c)) {
@@ -81,7 +94,7 @@ function buildParams(
             c.type = utils.buildParentPathName(
                 childChildType || childTypeName,
                 pathName,
-                utils.parseObjectName(c.name),
+                utils.toFirstUpperCase(utils.parseObjectName(c.name)),
             );
         }
         buildParams(modelType, c, models);
@@ -166,5 +179,11 @@ export function generate(response: string): RequestTypes.RequestData {
     const methodName = utils.parseObjectName(utils.snake2pascal(requestName));
     const requestParamList = result.apiAppParamVOList;
     const responseParamList = result.apiReturnParamVOList;
-    return genModels([location.href], requestName, methodName, requestParamList, responseParamList);
+    return genModels(
+        [location.href],
+        `${result.namespace}/${requestName}`,
+        methodName,
+        requestParamList,
+        responseParamList,
+    );
 }

@@ -2,9 +2,24 @@ import * as CryptoJS from 'crypto-js';
 
 import { Platform } from '@/constants';
 
+export function toFirstUpperCase(name: string): string {
+    return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
+export function toFirstLowerCase(name: string): string {
+    return name.charAt(0).toLowerCase() + name.slice(1);
+}
+
 export function snake2pascal(name: string): string {
     const camelCase = name.replace(/[./_]([a-z])/g, (_, char) => char.toUpperCase());
-    return camelCase.charAt(0).toUpperCase() + camelCase.slice(1);
+    return toFirstUpperCase(camelCase);
+}
+
+export function pascal2snake(name: string): string {
+    const snakeCase = name.replace(/([a-z][A-Z])/g, (_, char) => {
+        return `${char[0]}_${char[1].toLowerCase()}`;
+    });
+    return toFirstLowerCase(snakeCase);
 }
 
 export function pascal2pathname(name: string): string {
@@ -16,7 +31,7 @@ export function pascal2pathname(name: string): string {
         }
         return `${first}.${second}`;
     });
-    return pathname.charAt(0).toLowerCase() + pathname.slice(1);
+    return toFirstLowerCase(pathname);
 }
 
 export function pathname2requestName(pathname: string): string {
@@ -31,7 +46,7 @@ export function parseArrayName(name: string): string {
     if (tmpName.toLowerCase() === 'list') {
         return tmpName;
     }
-    if (name.includes('List') || name.toLowerCase().includes('array')) {
+    if (name.toLowerCase().includes('list') || name.toLowerCase().includes('array')) {
         const match = name.match(/[Ll]ist<(.+)>|[Aa]rray<(.+)>/);
         if (match) {
             return match[1];
