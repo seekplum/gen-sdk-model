@@ -22,7 +22,7 @@ function buildFieldArgs(childParam: RequestTypes.IParam, config: IExtensionConfi
                 break;
             case VariableTypes.INT:
             case VariableTypes.FLOAT:
-                maxLenVal = `le=${10 ** childParam.maxLength}`;
+                maxLenVal = `le=${childParam.maxLength}`;
                 break;
         }
         if (maxLenVal) {

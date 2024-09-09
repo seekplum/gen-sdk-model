@@ -87,6 +87,22 @@ function buildModels(
     return models;
 }
 
+function parseMaxLength(param: IParam): number | null {
+    const maxLength = param.value.maxLength;
+    if (!maxLength) {
+        return null;
+    }
+    const lowerType = param.value.exactType.toLowerCase();
+    if (lowerType === 'price') {
+        // 两个小数 + 一个小数点
+        return 10 ** (maxLength - 3);
+    }
+    if (lowerType === 'number') {
+        return maxLength <= 10 ? 10 ** maxLength : maxLength;
+    }
+    return maxLength;
+}
+
 function convertModel(models: [string, ModelTypes, IParam[]][]): RequestTypes.RequestModel[] {
     const requestModels: RequestTypes.RequestModel[] = [];
     for (const values of models) {
@@ -102,7 +118,7 @@ function convertModel(models: [string, ModelTypes, IParam[]][]): RequestTypes.Re
                 example: utils.removeSpecialCharacters(param.value.example),
                 required: param.value.mustType === 'MUST',
                 deprecated: param.value.deprecated,
-                maxLength: param.value.maxLength,
+                maxLength: parseMaxLength(param),
             } as RequestTypes.IParam);
         }
 
