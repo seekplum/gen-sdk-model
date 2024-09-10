@@ -57,7 +57,12 @@ export function parseArrayName(name: string): string {
 
 export function parseObjectName(name: string): string {
     const values = name.split('.');
-    return values[values.length - 1];
+    const tmpName = values[values.length - 1];
+    const match = tmpName.match(/(\w+)$/);
+    if (match) {
+        return match[1];
+    }
+    return tmpName;
 }
 
 export function parsePlatform(host: string): Platform | null {
