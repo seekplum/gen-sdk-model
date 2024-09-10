@@ -11,15 +11,16 @@ export function toFirstLowerCase(name: string): string {
 }
 
 export function snake2pascal(name: string): string {
-    const camelCase = name.replace(/[./_]([a-z])/g, (_, char) => char.toUpperCase());
+    const camelCase = name.replace(/[./_]([A-Za-z])/g, (_, char) => char.toUpperCase());
     return toFirstUpperCase(camelCase);
 }
 
 export function pascal2snake(name: string): string {
-    const snakeCase = name.replace(/([a-z][A-Z])/g, (_, char) => {
-        return `${char[0]}_${char[1].toLowerCase()}`;
-    });
-    return toFirstLowerCase(snakeCase);
+    let snake = name.replace(/([A-Z]+)([A-Z][a-z])/g, (_, p1, p2) => `${p1}_${p2}`);
+    snake = snake.replace(/([a-z])([A-Z])/g, (_, p1, p2) => `${p1}_${p2}`);
+    snake = snake.replace(/(\d)([A-Z])/g, (_, p1, p2) => `${p1}_${p2}`);
+    // snake = snake.replace(/([a-z])(\d)/g, (_, p1, p2) => `${p1}_${p2}`);
+    return snake.toLowerCase();
 }
 
 export function pascal2pathname(name: string): string {
@@ -57,12 +58,12 @@ export function parseArrayName(name: string): string {
 
 export function parseObjectName(name: string): string {
     const values = name.split('.');
-    const tmpName = values[values.length - 1];
+    let tmpName = values[values.length - 1];
     const match = tmpName.match(/(\w+)$/);
     if (match) {
-        return match[1];
+        tmpName = match[1];
     }
-    return tmpName;
+    return snake2pascal(tmpName);
 }
 
 export function parsePlatform(host: string): Platform | null {
@@ -86,7 +87,7 @@ export function parsePlatform(host: string): Platform | null {
 }
 
 export function removeSpecialCharacters(value: string): string {
-    return value.replace(/[\n\r"\\]/g, '');
+    return value.replace(/[\n\r"\\]/g, '').trim();
 }
 
 export async function sleep(ms: number): Promise<void> {
