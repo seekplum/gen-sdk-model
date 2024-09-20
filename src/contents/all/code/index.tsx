@@ -8,7 +8,7 @@ import { vs, vs2015 } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 import { type Language, Platform } from '@/constants';
 
 import { generate, generateByDocument } from '../generate';
-import styles from './index.scss';
+import * as styles from './index.scss';
 import IndexVM from './index.vm';
 
 interface BaseProps {

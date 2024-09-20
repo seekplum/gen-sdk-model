@@ -1,8 +1,8 @@
 declare type StyleSheetModule = { [key: string]: string };
 
 declare module '*.scss' {
-    const exports: StyleSheetModule;
-    export default exports;
+    const classes: StyleSheetModule;
+    export = classes;
 }
 
 declare module '*.svg' {

@@ -5,7 +5,7 @@ import * as React from 'react';
 
 import { Language, Platform } from '@/constants';
 
-import styles from './App.scss';
+import * as styles from './App.scss';
 import AppVM from './App.vm';
 import { DocumentCode, ReadOnlyCode } from './code';
 

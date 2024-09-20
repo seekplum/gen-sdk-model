@@ -1,7 +1,7 @@
 import { Flex, Tooltip } from 'antd';
 import classNames from 'classnames';
 
-import styles from './item.module.scss';
+import * as styles from './item.module.scss';
 
 interface ControlListItemProps {
     children?: React.ReactNode;
