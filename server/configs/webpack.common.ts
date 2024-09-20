@@ -8,12 +8,7 @@ import WebpackBar from 'webpackbar';
 
 import { __DEV__, ENABLE_DEVTOOLS, PROJECT_ROOT } from '../utils/constants';
 import entry from '../utils/entry';
-import {
-  resolveExtension,
-  resolveNodeModules,
-  resolvePublic,
-  resolveSrc,
-} from '../utils/path';
+import { resolveExtension, resolveNodeModules, resolvePublic, resolveSrc } from '../utils/path';
 
 function getCssLoaders(importLoaders: number) {
     return [
@@ -115,7 +110,7 @@ const commonConfig: Configuration = {
                         ],
                     ],
                 },
-                exclude: /node_modules/,
+                exclude: resolveNodeModules(),
             },
             {
                 test: /\.css$/,
@@ -147,7 +142,7 @@ const commonConfig: Configuration = {
                     ...getCssLoaders(1),
                     {
                         loader: 'sass-loader',
-                        options: { sourceMap: true },
+                        options: { sourceMap: true, webpackImporter: true },
                     },
                 ],
             },
