@@ -1,14 +1,5 @@
 import type { FormInstance } from 'antd';
-import {
-  Button,
-  Form,
-  Input,
-  message,
-  Select,
-  Spin,
-  Switch,
-  Typography,
-} from 'antd';
+import { Button, Form, Input, message, Select, Spin, Switch, Typography } from 'antd';
 import { Observer } from 'mobx-react-lite';
 import * as React from 'react';
 
@@ -81,14 +72,17 @@ const App: React.FC = () => {
     const [alibabaForm] = Form.useForm();
     const [kuaishouForm] = Form.useForm();
     const [taobaoForm] = Form.useForm();
-    const platformForms: Array<[Platform, FormInstance]> = [
-        [Platform.DOUDIAN, doudianForm],
-        [Platform.WEIXIN, weixinForm],
-        [Platform.ALIPAY, aliapyForm],
-        [Platform.ALIBABA, alibabaForm],
-        [Platform.KUAISHOU, kuaishouForm],
-        [Platform.TAOBAO, taobaoForm],
-    ];
+    const platformForms: Array<[Platform, FormInstance]> = React.useMemo(
+        () => [
+            [Platform.DOUDIAN, doudianForm],
+            [Platform.WEIXIN, weixinForm],
+            [Platform.ALIPAY, aliapyForm],
+            [Platform.ALIBABA, alibabaForm],
+            [Platform.KUAISHOU, kuaishouForm],
+            [Platform.TAOBAO, taobaoForm],
+        ],
+        [doudianForm, weixinForm, aliapyForm, alibabaForm, kuaishouForm, taobaoForm],
+    );
     const vm = React.useMemo(() => new OptionsSettingsVM(), []);
 
     const [messageApi, contextHolder] = message.useMessage();
